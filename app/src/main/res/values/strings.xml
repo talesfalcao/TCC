@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">TCC</string>
+    <string name="select_days">Select the days</string>
+    <string name="go">GO!</string>
+    <string name="prompt">Select a day</string>
+    <string-array name="days_array">
+        <item>Sunday</item>
+        <item>Monday</item>
+        <item>Tuesday</item>
+        <item>Wednesday</item>
+        <item>Thursday</item>
+        <item>Friday</item>
+        <item>Saturday</item>
+    </string-array>
+</resources>
