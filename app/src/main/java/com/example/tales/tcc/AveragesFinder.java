@@ -111,8 +111,8 @@ public class AveragesFinder {
                 Log.d("Averages", "Average " + average.getLatitude() + ", " + average.getLongitude());
                 Log.d("Averages", "Location " + location.getLatitude() + ", " + location.getLongitude());
 
-                double latAverage = ((Double.parseDouble(location.getLatitude()) + average.getLatitude()) / 2);
-                double lonAverage = ((Double.parseDouble(location.getLongitude()) + average.getLongitude()) / 2);
+                double latAverage = ((Double.parseDouble(location.getLatitude()) + (average.getLatitude() * average.getCount())) / (average.getCount() + 1));
+                double lonAverage = ((Double.parseDouble(location.getLongitude()) + (average.getLongitude() * average.getCount())) / (average.getCount() + 1));
 
                 Log.d("Averages", "New Average " + latAverage + ", " + lonAverage + " - COUNT " + average.getCount());
                 average.setLatitude(latAverage);

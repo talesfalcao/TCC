@@ -129,7 +129,7 @@ public class AveragesModel {
         ArrayList<AveragesModel> averages;
         AveragesDatasource averagesDatasource = new AveragesDatasource(context);
         averagesDatasource.open();
-        averages = averagesDatasource.getAverages(Constants.weekday + "=? AND " + Constants.start_time + "<=? AND " + Constants.end_time + ">=? LIMIT 3", new String[]{weekday, hour, hour});
+        averages = averagesDatasource.getAverages(Constants.weekday + "=? AND " + Constants.start_time + "<=? AND " + Constants.end_time + ">=? ORDER BY _id DESC LIMIT 3", new String[]{weekday, hour, hour});
         averagesDatasource.close();
         return averages;
     }

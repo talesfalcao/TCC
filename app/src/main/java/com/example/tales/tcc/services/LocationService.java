@@ -14,6 +14,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.tales.tcc.AveragesFinder;
+import com.example.tales.tcc.PatternFinder;
 import com.example.tales.tcc.activities.MainActivity;
 import com.example.tales.tcc.db.LocationModel;
 import com.example.tales.tcc.db.PatternsModel;
@@ -63,7 +64,7 @@ public class LocationService extends Service {
 
         final LocationModel model = new LocationModel(stamp[0], String.valueOf(currentLocation.getLatitude()), String.valueOf(currentLocation.getLongitude()), stamp[2], stamp[3], stamp[1], bottom, bottom + 14);
 
-        final ArrayList<PatternsModel> pattern = PatternsModel.getPattern(LocationService.this, stamp[3], String.valueOf(bottom));
+        final ArrayList<PatternsModel> pattern = PatternFinder.getInstance(LocationService.this).findPattern(stamp[3], bottom);
         MainActivity instance = MainActivity.getInstance();
         if(instance != null) {
             if (pattern.isEmpty()) {
@@ -73,15 +74,22 @@ public class LocationService extends Service {
                     }
                 });
             } else if (pattern.size() == 1) {
+                final Location a = new Location("");
+                final Location b = new Location("");
+                a.setLatitude(Double.parseDouble(pattern.get(0).getLatitude()));
+                a.setLongitude(Double.parseDouble(pattern.get(0).getLongitude()));
+                b.setLatitude(Double.parseDouble(model.getLatitude()));
+                b.setLongitude(Double.parseDouble(model.getLongitude()));
+                String text;
+                if(a.distanceTo(b) > 150) {
+                    text = "Out of pattern by " + a.distanceTo(b) + " meters";
+                } else {
+                    text = "Pattern ok";
+                }
+                final String textAux = text;
                 MainActivity.getInstance().runOnUiThread(new Runnable() {
                     public void run() {
-                        Location a = new Location("");
-                        Location b = new Location("");
-                        a.setLatitude(Double.parseDouble(pattern.get(0).getLatitude()));
-                        a.setLongitude(Double.parseDouble(pattern.get(0).getLongitude()));
-                        b.setLatitude(Double.parseDouble(model.getLatitude()));
-                        b.setLongitude(Double.parseDouble(model.getLongitude()));
-                        Toast.makeText(LocationService.this, "Distance from pattern to location is " + a.distanceTo(b) + " meters", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LocationService.this, textAux, Toast.LENGTH_SHORT).show();
                     }
                 });
 

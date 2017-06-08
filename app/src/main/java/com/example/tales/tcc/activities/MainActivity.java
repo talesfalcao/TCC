@@ -86,16 +86,17 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        /*final GroupingsFinder finder = GroupingsFinder.getInstance(this);
+       /*GroupingsFinder finder = GroupingsFinder.getInstance(this);
         GroupingModel.deleteAll(MainActivity.this);
         finder.findGroupings();*/
+
+
         AveragesModel lastAverage = AveragesModel.getLastAverage(this);
         Log.d("Averages", "LastAverage != null -> " + lastAverage.getStart() + " " + lastAverage.getEnd() + " " + lastAverage.getDate());
         final ListView list = (ListView) findViewById(R.id.list);
         Button button = (Button) findViewById(R.id.button);
         Spinner spinner = (Spinner) findViewById(R.id.spinner1);
         final EditText et = (EditText) findViewById(R.id.et);
-
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -110,8 +111,11 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 list.setAdapter(new CustomAdapter(MainActivity.this, aux));*/
-                ArrayList<PatternsModel> array = PatternsModel.getPatternsByWeekday(MainActivity.this, selected);
-                list.setAdapter(new CustomAdapter(MainActivity.this, array));
+
+                //PatternFinder.getInstance(MainActivity.this).findPattern(selected, Integer.parseInt(et.getText().toString()));
+
+                /*ArrayList<PatternsModel> array = PatternsModel.getPatternsByWeekday(MainActivity.this, selected);
+                list.setAdapter(new CustomAdapter(MainActivity.this, array));*/
             }
         });
 

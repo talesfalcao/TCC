@@ -18,7 +18,7 @@ import java.util.ArrayList;
 public class AveragesDatasource {
     private SQLiteDatabase database;
     private SQLiteHelper dbHelper;
-    private String[] allColumns = {Constants.start_time, Constants.end_time, Constants.weekday, Constants.latitude, Constants.longitude, Constants.count, Constants.date };
+    private String[] allColumns = {"_id", Constants.start_time, Constants.end_time, Constants.weekday, Constants.latitude, Constants.longitude, Constants.count, Constants.date };
 
     public AveragesDatasource(Context context) {
         dbHelper = new SQLiteHelper(context);
@@ -83,7 +83,7 @@ public class AveragesDatasource {
     public AveragesModel getLastAverage() {
         AveragesModel averageModel = null;
 
-        Cursor cursor = database.rawQuery("SELECT * FROM " + Constants.averages + " ORDER BY " + Constants.date + " DESC, " + Constants.start_time + " DESC LIMIT 1", new String[]{});
+        Cursor cursor = database.rawQuery("SELECT * FROM " + Constants.averages + " ORDER BY _id DESC LIMIT 1", new String[]{});
 
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {

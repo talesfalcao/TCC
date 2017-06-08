@@ -3,6 +3,10 @@
     <string name="select_days">Select the days</string>
     <string name="go">GO!</string>
     <string name="prompt">Select a day</string>
+    <string name="password"> Password</string>
+    <string name="login">Login</string>
+    <string name="i_am_a_parent">I am a parent</string>
+    <string name="i_am_a_child">I am a child</string>
     <string-array name="days_array">
         <item>Sunday</item>
         <item>Monday</item>
