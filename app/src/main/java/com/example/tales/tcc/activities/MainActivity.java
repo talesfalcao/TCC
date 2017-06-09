@@ -86,7 +86,9 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-       /*GroupingsFinder finder = GroupingsFinder.getInstance(this);
+
+        //AveragesFinder.getInstance(this).findAverages();
+        /*GroupingsFinder finder = GroupingsFinder.getInstance(this);
         GroupingModel.deleteAll(MainActivity.this);
         finder.findGroupings();*/
 
@@ -138,8 +140,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-
-        //AveragesFinder.getInstance(this).findAverages();
     }
 
     @Override

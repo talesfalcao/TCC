@@ -47,7 +47,7 @@ public class DecideActivity extends AppCompatActivity {
         ivParent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(DecideActivity.this, MainActivity.class);
+                Intent i = new Intent(DecideActivity.this, DrawerActivity.class);
                 startActivity(i);
             }
         });

@@ -55,7 +55,8 @@ public class GroupingsFinder {
                         for(GroupingModel grouping : groups) {
                             groupLocation.setLatitude(grouping.getLatitude());
                             groupLocation.setLongitude(grouping.getLongitude());
-                            if(groupLocation.distanceTo(modelLocation) <= 100) {
+                            float distance = groupLocation.distanceTo(modelLocation);
+                            if(distance <= 300) {
                                 Log.d("GroupingsFinder", grouping.getCount() + "");
                                 Log.d("GroupingsFinder", "Add to average " + model.getDay() + " at" + bottom / 60 + ":" + bottom % 60);
                                 //Add model to group
@@ -96,7 +97,8 @@ public class GroupingsFinder {
             for (GroupingModel grouping : groups) {
                 groupLocation.setLatitude(grouping.getLatitude());
                 groupLocation.setLongitude(grouping.getLongitude());
-                if (groupLocation.distanceTo(modelLocation) <= 100) {
+                float distance = groupLocation.distanceTo(modelLocation);
+                if(distance <= 300) {
                     Log.d("GroupingsFinder", grouping.getCount() + "");
                     Log.d("GroupingsFinder", "Add to average " + average.getDay() + " at" + average.getStart() / 60 + ":" + average.getStart() % 60);
                     //Add model to group

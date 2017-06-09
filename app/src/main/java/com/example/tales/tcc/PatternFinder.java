@@ -102,9 +102,9 @@ public class PatternFinder {
             threeLocations.add(location);
         }
         if (threeLocations.size() >= 3) {
-            if (threeLocations.get(0).distanceTo(threeLocations.get(1)) <= 150 &&
-                    threeLocations.get(1).distanceTo(threeLocations.get(2)) <= 150 &&
-                    threeLocations.get(0).distanceTo(threeLocations.get(2)) <= 150) {
+            if (threeLocations.get(0).distanceTo(threeLocations.get(1)) <= 300 &&
+                    threeLocations.get(1).distanceTo(threeLocations.get(2)) <= 300 &&
+                    threeLocations.get(0).distanceTo(threeLocations.get(2)) <= 300) {
                 Double avgLat = (threeLocations.get(0).getLatitude() + threeLocations.get(1).getLatitude() + threeLocations.get(2).getLatitude()) / 3;
                 Double avgLon = (threeLocations.get(0).getLongitude() + threeLocations.get(1).getLongitude() + threeLocations.get(2).getLongitude()) / 3;
                 PatternsModel pattern = new PatternsModel(day, String.valueOf(bottom), String.valueOf(bottom + 14), String.valueOf(avgLat), String.valueOf(avgLon));
