@@ -81,7 +81,7 @@ public class LocationService extends Service {
                 b.setLatitude(Double.parseDouble(model.getLatitude()));
                 b.setLongitude(Double.parseDouble(model.getLongitude()));
                 String text;
-                if(a.distanceTo(b) > 150) {
+                if(a.distanceTo(b) > 300) {
                     text = "Out of pattern by " + a.distanceTo(b) + " meters";
                 } else {
                     text = "Pattern ok";
@@ -133,7 +133,7 @@ public class LocationService extends Service {
         }
     }
 
-    private String[] parseTimeStamp() {
+    public static String[] parseTimeStamp() {
         String[] stamp = new String[4];
         Long tsLong = System.currentTimeMillis();
         Date d = new Date(tsLong);
