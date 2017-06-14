@@ -48,7 +48,10 @@ public class DecideActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(DecideActivity.this, DrawerActivity.class);
+                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(i);
+                LoginActivity.getInstance().finish();
+                finish();
             }
         });
 

@@ -17,16 +17,24 @@ import android.widget.Toast;
 
 import com.example.tales.tcc.R;
 
+import cn.pedant.SweetAlert.SweetAlertDialog;
+
 /**
  * Login to MainActivity
  */
 
 public class LoginActivity extends AppCompatActivity {
+    private static LoginActivity instance = null;
+
+    public static LoginActivity getInstance() {
+        return instance;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login_activity);
-
+        instance = this;
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 100);
         }
@@ -38,6 +46,11 @@ public class LoginActivity extends AppCompatActivity {
         final EditText login = (EditText) findViewById(R.id.et_login);
         final EditText pw = (EditText) findViewById(R.id.et_password);
 
+        if(getIntent() != null && getIntent().getBooleanExtra("LOGOUT", false)) {
+            new SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
+                    .setTitleText("Logged out!")
+                    .show();
+        }
         Button button = (Button) findViewById(R.id.login_button);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -46,12 +59,9 @@ public class LoginActivity extends AppCompatActivity {
                     Intent i = new Intent(LoginActivity.this, DecideActivity.class);
                     startActivity(i);
                 } else {
-                    AlertDialog.Builder builder;
-                    builder = new AlertDialog.Builder(LoginActivity.this, android.R.style.Theme_Material_Dialog_Alert);
-
-                    builder.setTitle("Failed to login")
-                            .setMessage("Please verify your login and password")
-                            .setIcon(android.R.drawable.ic_dialog_alert)
+                    new SweetAlertDialog(LoginActivity.this, SweetAlertDialog.ERROR_TYPE)
+                            .setTitleText("Oops...")
+                            .setContentText("Please check your login information")
                             .show();
                 }
             }

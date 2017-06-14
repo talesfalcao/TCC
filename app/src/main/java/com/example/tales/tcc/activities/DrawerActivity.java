@@ -8,22 +8,20 @@ import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
+import com.example.tales.tcc.CustomDialog;
 import com.example.tales.tcc.DrawerAdapter;
 import com.example.tales.tcc.PatternFinder;
 import com.example.tales.tcc.R;
 import com.example.tales.tcc.db.AveragesModel;
-import com.example.tales.tcc.db.LocationModel;
 import com.example.tales.tcc.db.PatternsModel;
 import com.example.tales.tcc.services.LocationService;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -48,6 +46,7 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
     private DrawerLayout mDrawerLayout;
     private String mActivityTitle;
     private GoogleMap mMap;
+    ArrayList<String> array = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,12 +61,18 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
     private void init() {
         mDrawerList = (ListView)findViewById(R.id.navList);
         addDrawerItems();
+
         mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(DrawerActivity.this, "Time for an upgrade!", Toast.LENGTH_SHORT).show();
+                CustomDialog fragment1 = new CustomDialog();
+                Bundle args = new Bundle();
+                args.putString("title", array.get(position));
+                fragment1.setArguments(args);
+                fragment1.show(getSupportFragmentManager(), "tag");
             }
         });
+
         mDrawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
         mActivityTitle = getTitle().toString();
 
@@ -88,8 +93,8 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
     }
 
     private void addDrawerItems() {
-        ArrayList<String> array = new ArrayList<>();
-        array.add("Option 1");
+
+        array.add("Disable inspection");
         array.add("Option 2");
         array.add("Option 3");
         array.add("Option 4");
@@ -126,6 +131,14 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
             for (PatternsModel pattern : patterns) {
                 LatLng pat = new LatLng(Double.parseDouble(pattern.getLatitude()), Double.parseDouble(pattern.getLongitude()));
                 mMap.addMarker(new MarkerOptions().position(pat).title("Pattern").icon(vectorToBitmap(R.drawable.ic_locale, Color.parseColor("#FF7755"))));
+            }
+        }
+
+        final ArrayList<AveragesModel> averagesModels = AveragesModel.getAveragesByWeekdayHour(DrawerActivity.this, stamp[3], String.valueOf(bottom));
+        if (!patterns.isEmpty()) {
+            for (AveragesModel avg : averagesModels) {
+                LatLng pat = new LatLng(avg.getLatitude(), avg.getLongitude());
+                mMap.addMarker(new MarkerOptions().position(pat).title("Pattern").icon(vectorToBitmap(R.drawable.ic_poop_icon, Color.parseColor("#8B4513"))));
             }
         }
     }
