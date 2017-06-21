@@ -31,6 +31,7 @@ import java.util.TimerTask;
 
 public class LocationService extends Service {
     public static final String[] days = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+    public static boolean en = false;
 
     @Nullable
     @Override
@@ -55,7 +56,7 @@ public class LocationService extends Service {
                     storeData(currentLocation);
                 }
             }
-        }, 0, 300000);
+        }, 0, 60000);
     }
 
     private void storeData(Location currentLocation) {

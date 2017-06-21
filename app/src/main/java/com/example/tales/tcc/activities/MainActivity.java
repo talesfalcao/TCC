@@ -3,6 +3,7 @@ package com.example.tales.tcc.activities;
 import android.Manifest;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Environment;
@@ -22,7 +23,9 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.example.tales.tcc.AveragesFinder;
+import com.example.tales.tcc.Constants;
 import com.example.tales.tcc.CustomAdapter;
+import com.example.tales.tcc.CustomDialog;
 import com.example.tales.tcc.GroupingsFinder;
 import com.example.tales.tcc.PatternFinder;
 import com.example.tales.tcc.R;
@@ -30,6 +33,7 @@ import com.example.tales.tcc.db.AveragesModel;
 import com.example.tales.tcc.db.GroupingModel;
 import com.example.tales.tcc.db.LocationModel;
 import com.example.tales.tcc.db.PatternsModel;
+import com.example.tales.tcc.db.UserModel;
 import com.example.tales.tcc.services.LocationService;
 
 import java.io.File;
@@ -39,8 +43,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
-    String selected;
+import cn.pedant.SweetAlert.SweetAlertDialog;
+
+public class MainActivity extends AppCompatActivity implements CustomDialog.EditNameDialogListener {
     private static MainActivity instance = null;
 
     public static MainActivity getInstance() {
@@ -84,52 +89,21 @@ public class MainActivity extends AppCompatActivity {
         /*final PatternFinder finder = PatternFinder.getInstance(this);
         finder.findPatterns();*/
 
-
-
-
         //AveragesFinder.getInstance(this).findAverages();
+
         /*GroupingsFinder finder = GroupingsFinder.getInstance(this);
         GroupingModel.deleteAll(MainActivity.this);
         finder.findGroupings();*/
 
-
-        AveragesModel lastAverage = AveragesModel.getLastAverage(this);
-        Log.d("Averages", "LastAverage != null -> " + lastAverage.getStart() + " " + lastAverage.getEnd() + " " + lastAverage.getDate());
-        final ListView list = (ListView) findViewById(R.id.list);
         Button button = (Button) findViewById(R.id.button);
-        Spinner spinner = (Spinner) findViewById(R.id.spinner1);
-        final EditText et = (EditText) findViewById(R.id.et);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*ArrayList<AveragesModel> array = AveragesModel.getAveragesByWeekday(MainActivity.this, selected);
-                list.setAdapter(new CustomAdapter(MainActivity.this, array));*/
-
-                /*ArrayList<AveragesModel> array = AveragesModel.getAveragesByWeekdayHour(MainActivity.this, selected, et.getText().toString());
-                ArrayList<AveragesModel> aux = new ArrayList<>();
-                for(AveragesModel avg: array) {
-                    if(avg.getStart() <= Integer.parseInt(et.getText().toString()) && avg.getEnd() >= Integer.parseInt(et.getText().toString())) {
-                        aux.add(avg);
-                    }
-                }
-                list.setAdapter(new CustomAdapter(MainActivity.this, aux));*/
-
-                //PatternFinder.getInstance(MainActivity.this).findPattern(selected, Integer.parseInt(et.getText().toString()));
-
-                /*ArrayList<PatternsModel> array = PatternsModel.getPatternsByWeekday(MainActivity.this, selected);
-                list.setAdapter(new CustomAdapter(MainActivity.this, array));*/
-            }
-        });
-
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                selected = (String) parent.getItemAtPosition(position);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                Toast.makeText(MainActivity.this, "Select something", Toast.LENGTH_SHORT).show();
+                CustomDialog fragment1 = new CustomDialog();
+                Bundle args = new Bundle();
+                args.putString("title", "Input your password to logout");
+                fragment1.setArguments(args);
+                fragment1.show(getSupportFragmentManager(), "tag");
             }
         });
 
@@ -185,5 +159,25 @@ public class MainActivity extends AppCompatActivity {
         output.flush();
         output.close();
         fis.close();
+    }
+
+    @Override
+    public void onFinishEditDialog(String inputText) {
+        Log.d("Testing return", inputText);
+
+        ArrayList<UserModel> user = UserModel.getUser(MainActivity.this);
+        if(inputText.equals(user.get(0).getPassword())) {
+            UserModel.deleteUsers(MainActivity.this);
+            Intent newIntent = new Intent(MainActivity.this, LoginActivity.class);
+            newIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            newIntent.putExtra("LOGOUT", true);
+            MainActivity.this.startActivity(newIntent);
+        } else {
+            new SweetAlertDialog(MainActivity.this, SweetAlertDialog.ERROR_TYPE)
+                    .setTitleText("Oops...")
+                    .setContentText("Wrong password!")
+                    .show();
+        }
     }
 }

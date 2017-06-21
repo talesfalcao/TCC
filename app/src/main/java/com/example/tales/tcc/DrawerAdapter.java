@@ -12,7 +12,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.tales.tcc.activities.LoginActivity;
+import com.example.tales.tcc.activities.MainActivity;
 import com.example.tales.tcc.db.PatternsModel;
+import com.example.tales.tcc.db.UserModel;
 
 import java.util.ArrayList;
 
@@ -60,25 +62,6 @@ public class DrawerAdapter extends BaseAdapter {
         } else {
             tv.setTextColor(Color.parseColor("#AA0000"));
             iv.setImageResource(R.drawable.ic_logout);
-            rowView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    new SweetAlertDialog(mContext, SweetAlertDialog.WARNING_TYPE)
-                            .setTitleText("Are you sure?")
-                            .setConfirmText("Logout!")
-                            .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
-                                @Override
-                                public void onClick(SweetAlertDialog sDialog) {
-                                    Intent newIntent = new Intent(mContext,LoginActivity.class);
-                                    newIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                                    newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    newIntent.putExtra("LOGOUT", true);
-                                    mContext.startActivity(newIntent);
-                                }
-                            })
-                            .show();
-                }
-            });
         }
         return rowView;
     }

@@ -4,8 +4,11 @@ import android.app.Dialog;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -22,6 +25,7 @@ public class CustomDialog extends DialogFragment {
     EditText mEditText;
     String title = "";
     String text = "";
+    private EditNameDialogListener listener;
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -43,10 +47,22 @@ public class CustomDialog extends DialogFragment {
         mButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getActivity(), title + " dialog return", Toast.LENGTH_SHORT).show();
+                listener = (EditNameDialogListener) getActivity();
+                listener.onFinishEditDialog(mEditText.getText().toString());
                 dismiss();
             }
         });
         return dialog;
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        getDialog().setCanceledOnTouchOutside(false);
+        return super.onCreateView(inflater, container, savedInstanceState);
+    }
+
+    public interface EditNameDialogListener {
+        void onFinishEditDialog(String inputText);
     }
 }

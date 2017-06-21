@@ -17,6 +17,17 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             tools:context="com.example.tales.tcc.activities.DrawerActivity" />
+
+        <ImageView
+            android:id="@+id/iv_refresh"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/ic_refresh"
+            android:background="@drawable/white_circle_background"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginBottom="10dp"
+            android:layout_marginRight="10dp"/>
     </RelativeLayout>
 
     <!-- Side navigation drawer UI -->

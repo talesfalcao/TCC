@@ -22,4 +22,11 @@ public class Constants {
     public static String bottom = "bottom";
     public static String top = "top";
     public static String grouping = "grouping";
+
+    public static String user = "user";
+    public static String name = "name";
+    public static String login = "login";
+    public static String password = "password";
+    public static String parent = "parent";
+    public static String child = "child";
 }
