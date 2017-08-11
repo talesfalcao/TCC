@@ -5,12 +5,10 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -22,14 +20,14 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.example.tales.tcc.CustomDialog;
+import com.example.tales.tcc.Constants;
 import com.example.tales.tcc.DrawerAdapter;
 import com.example.tales.tcc.PatternFinder;
 import com.example.tales.tcc.R;
 import com.example.tales.tcc.db.AveragesModel;
 import com.example.tales.tcc.db.LocationModel;
 import com.example.tales.tcc.db.PatternsModel;
-import com.example.tales.tcc.db.UserModel;
+import com.example.tales.tcc.db.UserLocModel;
 import com.example.tales.tcc.services.LocationService;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -39,6 +37,10 @@ import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.ArrayList;
 
@@ -69,6 +71,14 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
     }
 
     private void init() {
+        getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putBoolean(Constants.logged, true).apply();
+        getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putString(Constants.type, Constants.parent).apply();
+        /*String id = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+        database.child(Constants.users).child(id).child(Constants.firebase_token).setValue(FirebaseInstanceId.getInstance().getToken());
+        System.out.println(FirebaseInstanceId.getInstance().getToken() + " --------------");*/
+
         mDrawerList = (ListView)findViewById(R.id.navList);
         addDrawerItems();
 
@@ -94,6 +104,10 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
         refresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                String id = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+                DatabaseReference  database = FirebaseDatabase.getInstance().getReference();
+                database.child(Constants.users).child(id).child(Constants.pattern).setValue(Math.random());
                 mapFragment.getMapAsync(DrawerActivity.this);
             }
         });
@@ -216,8 +230,6 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
                                 .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                                     @Override
                                     public void onClick(SweetAlertDialog sDialog) {
-                                        UserModel.deleteUsers(DrawerActivity.this);
-
                                         Intent newIntent = new Intent(DrawerActivity.this,LoginActivity.class);
                                         newIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                         newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -245,11 +257,13 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
         mMap = googleMap;
         mMap.clear();
         AveragesModel lastOne = AveragesModel.getLastAverage(DrawerActivity.this);
-        LatLng pos = new LatLng(lastOne.getLatitude(), lastOne.getLongitude());
-        mMap.addMarker(new MarkerOptions().position(pos).title("Last location").icon(vectorToBitmap(R.drawable.ic_person_pin_circle_black, Color.parseColor("#FF7755"))));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(pos));
-        mMap.animateCamera( CameraUpdateFactory.zoomTo( 13.5f ) );
+        if(lastOne != null) {
+            LatLng pos = new LatLng(lastOne.getLatitude(), lastOne.getLongitude());
 
+            mMap.addMarker(new MarkerOptions().position(pos).title("Last location").icon(vectorToBitmap(R.drawable.ic_person_pin_circle_black, Color.parseColor("#FF7755"))));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(pos));
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(13.5f));
+        }
         final String[] stamp = LocationService.parseTimeStamp();
         final int bottom = (Integer.parseInt(stamp[2]) / 15) * 15;
 
@@ -262,6 +276,14 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
             }
         }
 
+        final ArrayList<UserLocModel> userLocs = UserLocModel.getAllLocations(DrawerActivity.this);
+        if (!userLocs.isEmpty()) {
+            for (UserLocModel userLoc : userLocs) {
+                LatLng pat = new LatLng(Double.parseDouble(userLoc.mLatitude), Double.parseDouble(userLoc.mLongitude));
+                mMap.addMarker(new MarkerOptions().position(pat).title(userLoc.mName).icon(vectorToBitmap(R.drawable.ic_locale, Color.parseColor("#FF8888"))));
+            }
+        }
+
         final ArrayList<AveragesModel> averagesModels = AveragesModel.getAveragesByWeekdayHour(DrawerActivity.this, stamp[3], String.valueOf(bottom));
         if (!averagesModels.isEmpty()) {
             for (AveragesModel avg : averagesModels) {
@@ -269,6 +291,8 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
                 mMap.addMarker(new MarkerOptions().position(pat).title("Average").icon(vectorToBitmap(R.drawable.ic_locale, Color.parseColor("#0000FF"))));
             }
         }
+
+
 
         final ArrayList<LocationModel> locations = LocationModel.getLocationsByWeekdayHourRange(DrawerActivity.this, stamp[3], String.valueOf(bottom), String.valueOf(bottom));
         for (LocationModel avg : locations) {

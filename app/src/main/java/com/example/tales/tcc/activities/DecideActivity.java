@@ -19,25 +19,27 @@ import com.example.tales.tcc.Constants;
 import com.example.tales.tcc.CustomDialog;
 import com.example.tales.tcc.R;
 import com.example.tales.tcc.db.UserModel;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
+
+import cn.pedant.SweetAlert.SweetAlertDialog;
 
 /**
  * Created by tales on 07/06/2017.
  */
 
 public class DecideActivity extends AppCompatActivity implements CustomDialog.EditNameDialogListener{
-    String login = "";
-    String pw = "";
+
     boolean parent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.decide_activity);
-        Bundle extras = DecideActivity.this.getIntent().getExtras();
-        if(extras != null) {
-            login = extras.getString(Constants.login);
-            pw = extras.getString(Constants.password);
-        }
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 100);
         }
@@ -77,18 +79,26 @@ public class DecideActivity extends AppCompatActivity implements CustomDialog.Ed
 
     @Override
     public void onFinishEditDialog(String inputText) {
-        Log.d("Testing return", inputText);
+        String id = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+
+
+        DatabaseReference  database = FirebaseDatabase.getInstance().getReference();
+        database.child(Constants.users).child(id).child(Constants.name).setValue(inputText);
+        database.child(Constants.users).child(id).child(Constants.logged).setValue("1");
+        database.child(Constants.users).child(id).child(Constants.firebase_token).setValue(FirebaseInstanceId.getInstance().getToken());
+
         if(parent) {
-            UserModel user = new UserModel(inputText, login, pw, Constants.parent, "");
-            user.insertUser(DecideActivity.this);
+            database.child(Constants.users).child(id).child(Constants.type).setValue(Constants.parent);
+
             Intent i = new Intent(DecideActivity.this, DrawerActivity.class);
             i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(i);
             LoginActivity.getInstance().finish();
             finish();
         } else {
-            UserModel user = new UserModel(inputText, login, pw, Constants.child, login);
-            user.insertUser(DecideActivity.this);
+            database.child(Constants.users).child(id).child(Constants.type).setValue(Constants.child);
+
             Intent i = new Intent(DecideActivity.this, MainActivity.class);
             i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(i);

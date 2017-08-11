@@ -25,6 +25,7 @@ public class SQLiteHelper  extends SQLiteOpenHelper {
         String createPattern = "CREATE TABLE " + Constants.patterns + " (" + Constants.start_time + " integer, " + Constants.end_time + " integer, " + Constants.weekday + " text, " + Constants.latitude + " text, " + Constants.type + " text, " + Constants.count + " integer, " + Constants.longitude + " text" + " )";
         String createGrouping = "CREATE TABLE " + Constants.grouping + " (" + Constants.start_time + " integer, " + Constants.end_time + " integer, " + Constants.latitude + " text, " + Constants.longitude + " text, " + Constants.count + " integer, " + Constants.weekday + " text )";
         String createUser = "CREATE TABLE " + Constants.user + " ( _id INTEGER PRIMARY KEY, " +  Constants.name + " text, " + Constants.login + " text, " + Constants.password + " text, " + Constants.type + " text, " + Constants.parent + " text )";
+        String createUserLocation = "CREATE TABLE " + Constants.userLoc + " ( " +  Constants.name + " text PRIMARY KEY, " + Constants.latitude + " text, " + Constants.longitude + " text )";
 
 
         db.execSQL(createLocation);
@@ -32,6 +33,7 @@ public class SQLiteHelper  extends SQLiteOpenHelper {
         db.execSQL(createPattern);
         db.execSQL(createGrouping);
         db.execSQL(createUser);
+        db.execSQL(createUserLocation);
     }
 
     @Override
@@ -39,17 +41,20 @@ public class SQLiteHelper  extends SQLiteOpenHelper {
         //db.execSQL("DROP TABLE IF EXISTS " + Constants.averages);
         //db.execSQL("DROP TABLE IF EXISTS " + Constants.patterns);
         //db.execSQL("DROP TABLE IF EXISTS " + Constants.grouping);
-        db.execSQL("DROP TABLE IF EXISTS " + Constants.user);
+        //db.execSQL("DROP TABLE IF EXISTS " + Constants.user);
+        db.execSQL("DROP TABLE IF EXISTS " + Constants.userLoc);
 
         //String createAverages = "CREATE TABLE " + Constants.averages + " ( _id INTEGER PRIMARY KEY, " + Constants.start_time + " integer, " + Constants.end_time + " integer, " + Constants.weekday + " text, " + Constants.latitude + " text, " + Constants.longitude + " text, " + Constants.count + " text, " + Constants.date + " text" + " )";
         //String createPattern = "CREATE TABLE " + Constants.patterns + " (" + Constants.start_time + " integer, " + Constants.end_time + " integer, " + Constants.weekday + " text, " + Constants.latitude + " text, " + Constants.type + " text, " + Constants.count + " integer, " + Constants.longitude + " text" + " )";
         //String createGrouping = "CREATE TABLE " + Constants.grouping + " (" + Constants.start_time + " integer, " + Constants.end_time + " integer, " + Constants.latitude + " text, " + Constants.longitude + " text, " + Constants.count + " integer, " + Constants.weekday + " text )";
-        String createUser = "CREATE TABLE " + Constants.user + " ( _id INTEGER PRIMARY KEY, " +  Constants.name + " text, " + Constants.login + " text, " + Constants.password + " text, " + Constants.type + " text, " + Constants.parent + " text )";
+        //String createUser = "CREATE TABLE " + Constants.user + " ( _id INTEGER PRIMARY KEY, " +  Constants.name + " text, " + Constants.login + " text, " + Constants.password + " text, " + Constants.type + " text, " + Constants.parent + " text )";
+        String createUserLocation = "CREATE TABLE " + Constants.userLoc + " ( " +  Constants.name + " text PRIMARY KEY, " + Constants.latitude + " text, " + Constants.longitude + " text )";
 
         //db.execSQL(createAverages);
         //db.execSQL(createPattern);
         //db.execSQL(createGrouping);
-        db.execSQL(createUser);
+        //db.execSQL(createUser);
+        db.execSQL(createUserLocation);
 
     }
 }

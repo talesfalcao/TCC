@@ -5,6 +5,8 @@ package com.example.tales.tcc;
  */
 
 public class Constants {
+    public static final String SHARED_PREFS = "SHARED_PREFS";
+
     public static final String timestamp = "timestamp";
     public static final String date = "date";
     public static final String weekday = "weekday";
@@ -29,4 +31,14 @@ public class Constants {
     public static String password = "password";
     public static String parent = "parent";
     public static String child = "child";
+    public static String users = "users";
+    public static String logged = "logged";
+    public static String firebase_token = "firebase_token";
+    public static String pattern = "pattern";
+    public static String family = "family";
+    public static String inside = "inside";
+    public static String last_update = "last_update";
+    public static String current_latitude = "current_latitude";
+    public static String current_longitude = "current_longitude";
+    public static String userLoc = "userLoc";
 }

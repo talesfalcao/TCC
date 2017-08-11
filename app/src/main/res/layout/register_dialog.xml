@@ -1,28 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/parent"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/colorPrimaryLight"
-    android:focusable="true"
-    android:focusableInTouchMode="true">
-
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_marginTop="@dimen/dimen_50dp"
-        android:layout_width="@dimen/dimen_150dp"
-        android:layout_height="@dimen/dimen_150dp"
-        android:layout_centerHorizontal="true"
-        app:srcCompat="@drawable/ic_firebase_icon" />
+    android:id="@+id/layout_root"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:paddingLeft="@dimen/dimen_50dp"
+    android:paddingRight="@dimen/dimen_50dp"
+    android:paddingBottom="@dimen/dimen_20dp"
+    android:paddingTop="@dimen/dimen_50dp"
+    android:background="@color/colorPrimaryLight">
 
     <EditText
-        android:id="@+id/et_login"
+        android:id="@+id/et_register"
         android:layout_width="@dimen/dimen_200dp"
         android:layout_height="@dimen/dimen_50dp"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="@dimen/dimen_50dp"
-        android:layout_below="@id/imageView"
         android:inputType="textEmailAddress"
         android:textColor="@color/colorPrimaryDark"
         android:textSize="@dimen/font_15"
@@ -37,7 +28,7 @@
         android:layout_alignRight="@id/et_login"
         android:layout_alignLeft="@id/et_login"
         android:background="@color/colorPrimaryDark"
-        android:layout_below="@id/et_login"/>
+        android:layout_below="@id/et_register"/>
 
     <EditText
         android:id="@+id/et_password"
@@ -62,25 +53,16 @@
         android:background="@color/colorPrimaryDark"
         android:layout_below="@id/et_password"/>
 
-    <TextView
-        android:id="@+id/register"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/line2"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="@dimen/dimen_20dp"
-        android:text="@string/register_hint"
-        android:textColor="@color/colorAccent"/>
-
     <Button
-        android:id="@+id/login_button"
+        android:id="@+id/register_button"
         android:layout_width="@dimen/dimen_150dp"
-        android:layout_height="@dimen/dimen_50dp"
-        android:layout_alignParentBottom="true"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/dimen_10dp"
+        android:text="@string/register"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="@dimen/dimen_20dp"
-        android:background="@drawable/rounded_button"
-        android:text="@string/login"
         android:textColor="@color/colorPrimaryLight"
-        android:textSize="@dimen/font_17" />
+        android:textSize="@dimen/font_17"
+        android:background="@drawable/rounded_button"
+        android:layout_marginTop="@dimen/dimen_50dp"
+        android:layout_below="@id/line2"/>
 </RelativeLayout>

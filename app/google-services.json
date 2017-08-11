@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "17041331160",
+    "firebase_url": "https://my-tcc-66923.firebaseio.com",
+    "project_id": "my-tcc-66923",
+    "storage_bucket": "my-tcc-66923.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:17041331160:android:0c0d4a4cc902a859",
+        "android_client_info": {
+          "package_name": "com.example.tales.tcc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "17041331160-piakhkdbj01rq2foapp58mc12b099pqg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.tales.tcc",
+            "certificate_hash": "2136353c47e3f0360dde0b7d46f4d96076e8cb11"
+          }
+        },
+        {
+          "client_id": "17041331160-3ni9s4gar4t5rsvshe9u782ceju3upci.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZXEz3uVpbtrMdSiqpMjCwwRNRKY4MsEE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "17041331160-3ni9s4gar4t5rsvshe9u782ceju3upci.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

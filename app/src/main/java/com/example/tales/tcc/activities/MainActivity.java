@@ -35,6 +35,7 @@ import com.example.tales.tcc.db.LocationModel;
 import com.example.tales.tcc.db.PatternsModel;
 import com.example.tales.tcc.db.UserModel;
 import com.example.tales.tcc.services.LocationService;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,7 +46,7 @@ import java.util.ArrayList;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
 
-public class MainActivity extends AppCompatActivity implements CustomDialog.EditNameDialogListener {
+public class MainActivity extends AppCompatActivity {
     private static MainActivity instance = null;
 
     public static MainActivity getInstance() {
@@ -57,6 +58,8 @@ public class MainActivity extends AppCompatActivity implements CustomDialog.Edit
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         instance = this;
+        getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putString(Constants.type, Constants.child).apply();
+        getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putBoolean(Constants.logged, true).apply();
 
         //test();
 
@@ -99,11 +102,20 @@ public class MainActivity extends AppCompatActivity implements CustomDialog.Edit
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                CustomDialog fragment1 = new CustomDialog();
-                Bundle args = new Bundle();
-                args.putString("title", "Input your password to logout");
-                fragment1.setArguments(args);
-                fragment1.show(getSupportFragmentManager(), "tag");
+                new SweetAlertDialog(MainActivity.this, SweetAlertDialog.WARNING_TYPE)
+                        .setTitleText("Are you sure?")
+                        .setConfirmText("Logout!")
+                        .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                            @Override
+                            public void onClick(SweetAlertDialog sDialog) {
+                                Intent newIntent = new Intent(MainActivity.this,LoginActivity.class);
+                                newIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                newIntent.putExtra("LOGOUT", true);
+                                MainActivity.this.startActivity(newIntent);
+                            }
+                        })
+                        .show();
             }
         });
 
@@ -159,25 +171,5 @@ public class MainActivity extends AppCompatActivity implements CustomDialog.Edit
         output.flush();
         output.close();
         fis.close();
-    }
-
-    @Override
-    public void onFinishEditDialog(String inputText) {
-        Log.d("Testing return", inputText);
-
-        ArrayList<UserModel> user = UserModel.getUser(MainActivity.this);
-        if(inputText.equals(user.get(0).getPassword())) {
-            UserModel.deleteUsers(MainActivity.this);
-            Intent newIntent = new Intent(MainActivity.this, LoginActivity.class);
-            newIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            newIntent.putExtra("LOGOUT", true);
-            MainActivity.this.startActivity(newIntent);
-        } else {
-            new SweetAlertDialog(MainActivity.this, SweetAlertDialog.ERROR_TYPE)
-                    .setTitleText("Oops...")
-                    .setContentText("Wrong password!")
-                    .show();
-        }
     }
 }
