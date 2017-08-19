@@ -24,4 +24,5 @@
     <string name="register_hint">Click here to register</string>
     <string name="register">Register</string>
     <string name="activate_a_child_device">Activate a child device</string>
+    <string name="done">Done</string>
 </resources>

@@ -1,10 +1,18 @@
 package com.example.tales.tcc.activities;
 
+import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.Image;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
@@ -13,11 +21,16 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.example.tales.tcc.Constants;
@@ -41,6 +54,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
 
 import java.util.ArrayList;
 
@@ -51,6 +68,7 @@ import cn.pedant.SweetAlert.SweetAlertDialog;
  */
 
 public class DrawerActivity extends FragmentActivity implements OnMapReadyCallback {
+    AlertDialog alertDialog;
     private ListView mDrawerList;
     private DrawerAdapter mAdapter;
     private ActionBarDrawerToggle mDrawerToggle;
@@ -122,6 +140,7 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
         array.add("Block Device");
         array.add("Insert Pattern");
         array.add("Wipe Device");
+        array.add("Share family code");
         array.add("Logout");
         mAdapter = new DrawerAdapter(this, array);
         mDrawerList.setAdapter(mAdapter);
@@ -224,6 +243,43 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
                                 .show();
                         break;
                     case 4:
+                        SharedPreferences sharedPreferences = getSharedPreferences(Constants.SHARED_PREFS, Context.MODE_PRIVATE);
+                        LayoutInflater li = LayoutInflater.from(DrawerActivity.this);
+                        View promptsView = li.inflate(R.layout.qrdialog_layout, null);
+
+                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(DrawerActivity.this);
+
+                        alertDialogBuilder.setView(promptsView);
+
+                        Typeface regularFont = Typeface.createFromAsset(getAssets(), "Quicksand-Regular.otf");
+                        Typeface bold = Typeface.createFromAsset(getAssets(), "Quicksand-Bold.otf");
+
+                        ImageView qr = (ImageView) promptsView.findViewById(R.id.qr);
+                        TextView title = (TextView) promptsView.findViewById(R.id.qr_title);
+                        TextView done = (TextView) promptsView.findViewById(R.id.done_button);
+                        title.setTypeface(regularFont);
+                        done.setTypeface(bold);
+
+                        done.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                alertDialog.dismiss();
+                            }
+                        });
+
+                        Log.d("AAAAAAAAAAAAAAAAAA", "ASDaSD " + sharedPreferences.getString(Constants.family, ""));
+
+                        try {
+                            qr.setImageBitmap(encodeAsBitmap(sharedPreferences.getString(Constants.family, "")));
+                        } catch (WriterException e) {
+                            e.printStackTrace();
+                        }
+
+                        alertDialogBuilder.setCancelable(true);
+                        alertDialog = alertDialogBuilder.create();
+                        alertDialog.show();
+                        break;
+                    case 5:
                         new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.WARNING_TYPE)
                                 .setTitleText("Are you sure?")
                                 .setConfirmText("Logout!")
@@ -313,5 +369,28 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
         DrawableCompat.setTint(vectorDrawable, color);
         vectorDrawable.draw(canvas);
         return BitmapDescriptorFactory.fromBitmap(bitmap);
+    }
+
+    private Bitmap encodeAsBitmap(String str) throws WriterException {
+        BitMatrix result;
+        try {
+            result = new MultiFormatWriter().encode(str,
+                    BarcodeFormat.QR_CODE, 300, 300, null);
+        } catch (IllegalArgumentException iae) {
+            // Unsupported format
+            return null;
+        }
+        int w = result.getWidth();
+        int h = result.getHeight();
+        int[] pixels = new int[w * h];
+        for (int y = 0; y < h; y++) {
+            int offset = y * w;
+            for (int x = 0; x < w; x++) {
+                pixels[offset + x] = result.get(x, y) ? 0xFF000000 : 0xFFFFFFFF;
+            }
+        }
+        Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        bitmap.setPixels(pixels, 0, 300, 0, 0, w, h);
+        return bitmap;
     }
 }

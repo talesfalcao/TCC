@@ -3,11 +3,7 @@
     android:id="@+id/layout_root"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:paddingLeft="@dimen/dimen_50dp"
-    android:paddingRight="@dimen/dimen_50dp"
-    android:paddingBottom="@dimen/dimen_20dp"
-    android:paddingTop="@dimen/dimen_50dp"
-    android:background="@color/colorPrimaryLight">
+    android:background="@drawable/dialog_backgound">
 
     <EditText
         android:id="@+id/et_register"

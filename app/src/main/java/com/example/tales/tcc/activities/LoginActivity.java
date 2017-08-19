@@ -38,20 +38,23 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.zxing.Result;
 
 import java.util.Map;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
+import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
 /**
  * Login to MainActivity
  */
 
-public class LoginActivity extends AppCompatActivity implements CustomDialog.EditNameDialogListener {
+public class LoginActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
     AlertDialog alertDialog;
     boolean parent;
     private static LoginActivity instance = null;
-
+    private ZXingScannerView mScannerView;
+    
     private FirebaseAuth auth;
     FirebaseAuth.AuthStateListener mAuthListener;
     ValueEventListener valueEventListener;
@@ -69,6 +72,10 @@ public class LoginActivity extends AppCompatActivity implements CustomDialog.Edi
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 100);
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 100);
         }
 
         if(getIntent() != null && getIntent().getBooleanExtra("LOGOUT", false)) {
@@ -277,11 +284,20 @@ public class LoginActivity extends AppCompatActivity implements CustomDialog.Edi
                                         @Override
                                         public void onClick(SweetAlertDialog sDialog) {
                                             parent = false;
-                                            CustomDialog fragment1 = new CustomDialog();
+                                            /*CustomDialog fragment1 = new CustomDialog();
                                             Bundle args = new Bundle();
                                             args.putString("title", "Enter the family code");
                                             fragment1.setArguments(args);
-                                            fragment1.show(getSupportFragmentManager(), "tag");
+                                            fragment1.show(getSupportFragmentManager(), "tag");*/
+
+                                            LayoutInflater li = LayoutInflater.from(LoginActivity.this);
+                                            View myView = li.inflate(R.layout.qrreader, null);
+
+                                            AlertDialog.Builder cDialog = new AlertDialog.Builder(LoginActivity.this);
+                                            cDialog.setView(myView);
+                                            cDialog.create();
+                                            sDialog.dismiss();
+                                            QrScanner(myView);
                                         }
                                     })
                                     .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
@@ -297,11 +313,20 @@ public class LoginActivity extends AppCompatActivity implements CustomDialog.Edi
                                                         @Override
                                                         public void onClick(SweetAlertDialog sDialog) {
                                                             parent = true;
-                                                            CustomDialog fragment1 = new CustomDialog();
+                                                            /*CustomDialog fragment1 = new CustomDialog();
                                                             Bundle args = new Bundle();
                                                             args.putString("title", "Enter the family code");
                                                             fragment1.setArguments(args);
-                                                            fragment1.show(getSupportFragmentManager(), "tag");
+                                                            fragment1.show(getSupportFragmentManager(), "tag");*/
+
+                                                            LayoutInflater li = LayoutInflater.from(LoginActivity.this);
+                                                            View myView = li.inflate(R.layout.qrreader, null);
+
+                                                            AlertDialog.Builder cDialog = new AlertDialog.Builder(LoginActivity.this);
+                                                            cDialog.setView(myView);
+                                                            cDialog.create();
+                                                            sDialog.dismiss();
+                                                            QrScanner(myView);
                                                         }
                                                     })
                                                     .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
@@ -319,6 +344,7 @@ public class LoginActivity extends AppCompatActivity implements CustomDialog.Edi
 
                                                             getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putBoolean(Constants.logged, true).apply();
                                                             getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putString(Constants.type, Constants.parent).apply();
+                                                            getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putString(Constants.family, id).apply();
                                                             Intent intent = new Intent(LoginActivity.this, DrawerActivity.class);
                                                             startActivity(intent);
                                                             finish();
@@ -392,8 +418,24 @@ public class LoginActivity extends AppCompatActivity implements CustomDialog.Edi
         }
     }
 
+    public void QrScanner(View view){
+        mScannerView = new ZXingScannerView(this);   // Programmatically initialize the scanner view
+        setContentView(mScannerView);
+        mScannerView.setResultHandler(this); // Register ourselves as a handler for scan results.
+        mScannerView.startCamera();         // Start camera
+    }
     @Override
-    public void onFinishEditDialog(String inputText) {
+    public void onPause() {
+        super.onPause();
+        mScannerView.stopCamera();
+    }
+
+    @Override
+    public void handleResult(Result rawResult) {
+        Log.e("handler", rawResult.getText()); // Prints scan results
+        Log.e("handler", rawResult.getBarcodeFormat().toString()); // Prints the scan format (qrcode)
+        String inputText = rawResult.getBarcodeFormat().toString();
+
         SharedPreferences sharedPreferences = getSharedPreferences(Constants.family, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(Constants.family, inputText);

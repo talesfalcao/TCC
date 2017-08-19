@@ -1,0 +1,44 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="@dimen/dimen_350dp"
+    android:layout_height="wrap_content"
+    android:background="@drawable/dialog_backgound">
+
+    <TextView
+        android:id="@+id/qr_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Scan the QR Code below!"
+        android:textColor="@color/colorAccent"
+        android:gravity="center"/>
+
+    <ImageView
+        android:id="@+id/qr"
+        android:layout_width="@dimen/dimen_100dp"
+        android:layout_height="@dimen/dimen_100dp"
+        android:layout_below="@id/qr_title"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="@dimen/dimen_20dp"
+        android:layout_marginBottom="@dimen/dimen_30dp"/>
+
+    <View
+        android:id="@+id/line"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorPrimaryDark"
+        android:layout_below="@id/qr"/>
+
+    <Button
+        android:id="@+id/done_button"
+        android:layout_width="@dimen/dimen_150dp"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/dimen_5dp"
+        android:text="@string/done"
+        android:textAllCaps="true"
+        android:layout_centerHorizontal="true"
+        android:textColor="@color/colorPrimaryLight"
+        android:textSize="@dimen/font_17"
+        android:background="@drawable/rounded_button"
+        android:layout_marginTop="@dimen/dimen_20dp"
+        android:layout_below="@id/line"/>
+</RelativeLayout>
