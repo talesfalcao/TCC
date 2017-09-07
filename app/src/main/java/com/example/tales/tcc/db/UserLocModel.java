@@ -11,12 +11,14 @@ import java.util.ArrayList;
  */
 
 public class UserLocModel {
-    public String mLatitude, mLongitude, mName;
+    public String id, mLatitude, mLongitude, mName, mInside;
 
-    public UserLocModel(String name, String latitude, String longitude) {
+    public UserLocModel(String id, String name, String latitude, String longitude, String inside) {
+        this.id = id;
         this.mName = name;
         this.mLatitude = latitude;
         this.mLongitude = longitude;
+        this.mInside = inside;
     }
 
     public void insertLocation(Context context) {
@@ -33,5 +35,14 @@ public class UserLocModel {
         locations = locationDatasource.getLocations(null, null);
         locationDatasource.close();
         return locations;
+    }
+
+    public static int deleteName(Context context, String id) {
+        int deleted;
+        UserLocDatasource locationDatasource = new UserLocDatasource(context);
+        locationDatasource.open();
+        deleted = locationDatasource.delete(Constants.id + "=?", new String[]{id});
+        locationDatasource.close();
+        return deleted;
     }
 }

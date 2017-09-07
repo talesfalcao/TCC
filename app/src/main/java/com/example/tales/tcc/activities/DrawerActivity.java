@@ -14,6 +14,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.Image;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.v4.app.FragmentActivity;
@@ -28,11 +29,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.example.tales.tcc.ChooseDialog;
 import com.example.tales.tcc.Constants;
 import com.example.tales.tcc.DrawerAdapter;
 import com.example.tales.tcc.PatternFinder;
@@ -59,7 +63,14 @@ import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
 
@@ -77,15 +88,38 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
     private GoogleMap mMap;
     ArrayList<String> array = new ArrayList<>();
     SupportMapFragment mapFragment;
+    public ArrayList<UserLocModel> selected = new ArrayList<>();
+    public static DrawerActivity instance = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.drawer_activity);
+        instance = this;
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         init();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        try {
+            if (getIntent().getBooleanExtra("OUTSIDE", false)) {
+                Toast.makeText(this, "OUTSIDE", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            Log.e("Drawer Activity", "No intent");
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if(intent.getBooleanExtra("OUTSIDE", false)) {
+            Toast.makeText(this, "OUTSIDE", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void init() {
@@ -189,7 +223,36 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
                         }
                         break;
                     case 1:
-                        new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.WARNING_TYPE)
+                        ChooseDialog choose = new ChooseDialog(DrawerActivity.this);
+                        choose.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                            @Override
+                            public void onDismiss(DialogInterface dialog) {
+                                if(!selected.isEmpty()) {
+                                    LayoutInflater li = LayoutInflater.from(DrawerActivity.this);
+                                    View promptsView = li.inflate(R.layout.new_password, null);
+
+                                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(DrawerActivity.this);
+
+                                    alertDialogBuilder.setView(promptsView);
+
+                                    final EditText userEt = (EditText) promptsView.findViewById(R.id.et_pw);
+                                    final TextView register = (TextView) promptsView.findViewById(R.id.register_button);
+
+                                    register.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            lockPw(userEt.getText().toString().trim());
+                                        }
+                                    });
+
+                                    alertDialogBuilder.setCancelable(true);
+                                    alertDialog = alertDialogBuilder.create();
+                                    alertDialog.show();
+                                }
+                            }
+                        });
+                        choose.show();
+                       /* new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.WARNING_TYPE)
                                 .setTitleText("Block device")
                                 .setContentText("Block the child device with a password")
                                 .setConfirmText("Block it!")
@@ -204,7 +267,7 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
                                                 .changeAlertType(SweetAlertDialog.SUCCESS_TYPE);
                                     }
                                 })
-                                .show();
+                                .show();*/
                         break;
                     case 2:
                         new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.WARNING_TYPE)
@@ -244,19 +307,19 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
                         break;
                     case 4:
                         SharedPreferences sharedPreferences = getSharedPreferences(Constants.SHARED_PREFS, Context.MODE_PRIVATE);
-                        LayoutInflater li = LayoutInflater.from(DrawerActivity.this);
-                        View promptsView = li.inflate(R.layout.qrdialog_layout, null);
+                        LayoutInflater li2 = LayoutInflater.from(DrawerActivity.this);
+                        View promptsView2 = li2.inflate(R.layout.qrdialog_layout, null);
 
-                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(DrawerActivity.this);
+                        AlertDialog.Builder alertDialogBuilder2 = new AlertDialog.Builder(DrawerActivity.this);
 
-                        alertDialogBuilder.setView(promptsView);
+                        alertDialogBuilder2.setView(promptsView2);
 
                         Typeface regularFont = Typeface.createFromAsset(getAssets(), "Quicksand-Regular.otf");
                         Typeface bold = Typeface.createFromAsset(getAssets(), "Quicksand-Bold.otf");
 
-                        ImageView qr = (ImageView) promptsView.findViewById(R.id.qr);
-                        TextView title = (TextView) promptsView.findViewById(R.id.qr_title);
-                        TextView done = (TextView) promptsView.findViewById(R.id.done_button);
+                        ImageView qr = (ImageView) promptsView2.findViewById(R.id.qr);
+                        TextView title = (TextView) promptsView2.findViewById(R.id.qr_title);
+                        TextView done = (TextView) promptsView2.findViewById(R.id.done_button);
                         title.setTypeface(regularFont);
                         done.setTypeface(bold);
 
@@ -275,8 +338,8 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
                             e.printStackTrace();
                         }
 
-                        alertDialogBuilder.setCancelable(true);
-                        alertDialog = alertDialogBuilder.create();
+                        alertDialogBuilder2.setCancelable(true);
+                        alertDialog = alertDialogBuilder2.create();
                         alertDialog.show();
                         break;
                     case 5:
@@ -298,6 +361,62 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
                 }
             }
         });
+    }
+
+    private void lockPw(String pw) {
+        if(pw.length() < 4 && !pw.isEmpty()) {
+            new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.ERROR_TYPE)
+                    .setTitleText("Whoops!")
+                    .setContentText("Passwords must have 4 or more characters")
+                    .setConfirmText("OK!")
+                    .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sDialog) {
+                            sDialog.dismiss();
+                        }
+                    })
+                    .show();
+        } else {
+            DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+            SharedPreferences sharedPreferences = getSharedPreferences(Constants.family, Context.MODE_PRIVATE);
+            String family = sharedPreferences.getString(Constants.family, "");
+            if(!family.isEmpty()) {
+                for(UserLocModel user : selected) {
+                    database.child(Constants.family).child(family).child(Constants.child).child(user.id).child(Constants.password).setValue(pw);
+                }
+
+                new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.SUCCESS_TYPE)
+                        .setTitleText("Done!")
+                        .setContentText(pw + " has been successfully set")
+                        .setConfirmText("OK")
+                        .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                            @Override
+                            public void onClick(SweetAlertDialog sDialog) {
+                                sDialog.dismiss();
+                                alertDialog.dismiss();
+                            }
+                        })
+                        .show();
+            } else {
+                new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.ERROR_TYPE)
+                        .setTitleText("Whoops!")
+                        .setContentText("Unexpected errer")
+                        .setConfirmText("OK!")
+                        .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                            @Override
+                            public void onClick(SweetAlertDialog sDialog) {
+                                sDialog.dismiss();
+                            }
+                        })
+                        .show();
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        instance = null;
     }
 
     /**
@@ -340,20 +459,13 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
             }
         }
 
-        final ArrayList<AveragesModel> averagesModels = AveragesModel.getAveragesByWeekdayHour(DrawerActivity.this, stamp[3], String.valueOf(bottom));
+        /*final ArrayList<AveragesModel> averagesModels = AveragesModel.getAveragesByWeekdayHour(DrawerActivity.this, stamp[3], String.valueOf(bottom));
         if (!averagesModels.isEmpty()) {
             for (AveragesModel avg : averagesModels) {
                 LatLng pat = new LatLng(avg.getLatitude(), avg.getLongitude());
                 mMap.addMarker(new MarkerOptions().position(pat).title("Average").icon(vectorToBitmap(R.drawable.ic_locale, Color.parseColor("#0000FF"))));
             }
-        }
-
-
-
-        final ArrayList<LocationModel> locations = LocationModel.getLocationsByWeekdayHourRange(DrawerActivity.this, stamp[3], String.valueOf(bottom), String.valueOf(bottom));
-        for (LocationModel avg : locations) {
-            Log.d("Testing here", avg.toString());
-        }
+        }*/
     }
 
     /**

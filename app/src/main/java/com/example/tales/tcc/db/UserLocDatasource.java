@@ -17,7 +17,7 @@ import java.util.ArrayList;
 public class UserLocDatasource {
     private SQLiteDatabase database;
     private SQLiteHelper dbHelper;
-    private String[] allColumns = {Constants.name,  Constants.latitude, Constants.longitude };
+    private String[] allColumns = {Constants.id, Constants.name,  Constants.latitude, Constants.longitude, Constants.inside };
 
     public UserLocDatasource(Context context) {
         dbHelper = new SQLiteHelper(context);
@@ -33,11 +33,13 @@ public class UserLocDatasource {
 
     public void insert(UserLocModel location) {
         ContentValues values = new ContentValues();
+        values.put(Constants.id, location.id);
         values.put(Constants.name, location.mName);
         values.put(Constants.latitude, location.mLatitude);
         values.put(Constants.longitude, location.mLongitude);
+        values.put(Constants.inside, location.mInside);
 
-        database.insertWithOnConflict(Constants.userLoc, Constants.name, values, SQLiteDatabase.CONFLICT_REPLACE);
+        database.insertWithOnConflict(Constants.userLoc, Constants.id, values, SQLiteDatabase.CONFLICT_REPLACE);
     }
 
     public ArrayList<UserLocModel> getLocations(String selection, String[] args) {
@@ -47,14 +49,20 @@ public class UserLocDatasource {
 
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
-            UserLocModel location = new UserLocModel(cursor.getString(cursor.getColumnIndex(Constants.name)),
+            UserLocModel location = new UserLocModel(cursor.getString(cursor.getColumnIndex(Constants.id)),
+                    cursor.getString(cursor.getColumnIndex(Constants.name)),
                     cursor.getString(cursor.getColumnIndex(Constants.latitude)),
-                    cursor.getString(cursor.getColumnIndex(Constants.longitude)));
+                    cursor.getString(cursor.getColumnIndex(Constants.longitude)),
+                    cursor.getString(cursor.getColumnIndex(Constants.inside)));
             locations.add(location);
             cursor.moveToNext();
         }
         // make sure to close the cursor
         cursor.close();
         return locations;
+    }
+
+    public int delete(String selection, String[] args) {
+        return database.delete(Constants.userLoc, selection, args);
     }
 }

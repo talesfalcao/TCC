@@ -25,4 +25,12 @@
     <string name="register">Register</string>
     <string name="activate_a_child_device">Activate a child device</string>
     <string name="done">Done</string>
+    <string name="device_admin">Admin</string>
+    <string name="device_admin_description">Admin Description blablabalbalabalabalablablablalbabababl ablablablalbalba</string>
+    <string name="block_password">Enter the password to be applied to your child device.</string>
+    <string name="what_is_your_name">What is your name?</string>
+    <string name="apply">apply</string>
+    <string name="choose_devices">Choose whose device will receive this action</string>
+    <string name="out">Out</string>
+    <string name="inside">Inside</string>
 </resources>

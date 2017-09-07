@@ -1,7 +1,10 @@
 package com.example.tales.tcc.activities;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -34,6 +37,7 @@ import com.example.tales.tcc.db.GroupingModel;
 import com.example.tales.tcc.db.LocationModel;
 import com.example.tales.tcc.db.PatternsModel;
 import com.example.tales.tcc.db.UserModel;
+import com.example.tales.tcc.receivers.AdminReceiver;
 import com.example.tales.tcc.services.LocationService;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -42,12 +46,17 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
 
 public class MainActivity extends AppCompatActivity {
     private static MainActivity instance = null;
+    static final int RESULT_ENABLE = 1;
+    DevicePolicyManager deviceManger;
+    ActivityManager activityManager;
+    ComponentName compName;
 
     public static MainActivity getInstance() {
         return instance;
@@ -61,8 +70,14 @@ public class MainActivity extends AppCompatActivity {
         getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putString(Constants.type, Constants.child).apply();
         getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putBoolean(Constants.logged, true).apply();
 
-        //test();
+        deviceManger = (DevicePolicyManager)getSystemService(
+                Context.DEVICE_POLICY_SERVICE);
+        activityManager = (ActivityManager)getSystemService(
+                Context.ACTIVITY_SERVICE);
+        compName = new ComponentName(this, AdminReceiver.class);
 
+        //test();
+        enableAdmin();
         init();
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -72,6 +87,28 @@ public class MainActivity extends AppCompatActivity {
                 startService(new Intent(getBaseContext(), LocationService.class));
             }
         }
+    }
+
+    private void enableAdmin() {
+        Intent intent = new Intent(DevicePolicyManager
+                .ACTION_ADD_DEVICE_ADMIN);
+        intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN,
+                compName);
+        startActivityForResult(intent, RESULT_ENABLE);
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case RESULT_ENABLE:
+                if (resultCode == Activity.RESULT_OK) {
+                    Log.i("DeviceAdminSample", "Admin enabled!");
+                } else {
+                    enableAdmin();
+                    Log.i("DeviceAdminSample", "Admin enable FAILED!");
+                }
+                return;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private void test() {
@@ -112,6 +149,7 @@ public class MainActivity extends AppCompatActivity {
                                 newIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                 newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                 newIntent.putExtra("LOGOUT", true);
+                                getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putBoolean(Constants.logged, false).apply();
                                 MainActivity.this.startActivity(newIntent);
                             }
                         })
@@ -119,13 +157,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        try {
+        /*try {
             backupDatabase();
         } catch (IOException e) {
             e.printStackTrace();
-        }
-
-
+        }*/
     }
 
     @Override
@@ -152,24 +188,32 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-    public static void backupDatabase() throws IOException {
-        //Open your local db as the input stream
-        String inFileName = "/data/data/com.example.tales.tcc/databases/location_database.db";
-        File dbFile = new File(inFileName);
-        FileInputStream fis = new FileInputStream(dbFile);
+    public void backupDatabase() throws IOException {
+        try {
+            File data = Environment.getDataDirectory();
+            File sd = Environment.getExternalStorageDirectory();
 
-        String outFileName = Environment.getExternalStorageDirectory()+"/location_database.db";
-        //Open the empty db as the output stream
-        OutputStream output = new FileOutputStream(outFileName);
-        //transfer bytes from the inputfile to the outputfile
-        byte[] buffer = new byte[1024];
-        int length;
-        while ((length = fis.read(buffer))>0){
-            output.write(buffer, 0, length);
+            if (sd.canWrite()) {
+                String  currentDBPath= "//data//" + getPackageName()
+                        + "//databases//" + "database.db";
+                String backupDBPath  = "/database.db";
+                File currentDB = new File(data, currentDBPath);
+                File backupDB = new File(sd, backupDBPath);
+
+                FileChannel src = new FileInputStream(currentDB).getChannel();
+                FileChannel dst = new FileOutputStream(backupDB).getChannel();
+                dst.transferFrom(src, 0, src.size());
+                src.close();
+                dst.close();
+                Toast.makeText(getBaseContext(), backupDB.toString(),
+                        Toast.LENGTH_LONG).show();
+
+            }
+        } catch (Exception e) {
+
+            Toast.makeText(getBaseContext(), e.toString(), Toast.LENGTH_LONG)
+                    .show();
+
         }
-        //Close the streams
-        output.flush();
-        output.close();
-        fis.close();
     }
 }

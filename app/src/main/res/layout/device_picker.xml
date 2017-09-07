@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_root"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/dialog_backgound">
+
+    <TextView
+        android:id="@+id/tv_pw"
+        android:layout_width="@dimen/dimen_200dp"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPrimaryDark"
+        android:text="@string/choose_devices"
+        android:textSize="@dimen/font_17"
+        android:gravity="center"
+        android:layout_centerHorizontal="true"/>
+
+    <ListView
+        android:id="@+id/lv"
+        android:layout_width="@dimen/dimen_300dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_pw"
+        android:layout_margin="@dimen/dimen_10dp"
+        android:layout_centerHorizontal="true"/>
+
+    <View
+        android:id="@+id/line1"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_alignRight="@id/lv"
+        android:layout_alignLeft="@id/lv"
+        android:background="@color/colorPrimaryDark"
+        android:layout_below="@id/lv"/>
+
+    <Button
+        android:id="@+id/register_button"
+        android:layout_width="@dimen/dimen_150dp"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/dimen_10dp"
+        android:text="@string/done"
+        android:layout_centerHorizontal="true"
+        android:textColor="@color/colorPrimaryLight"
+        android:textSize="@dimen/font_17"
+        android:background="@drawable/rounded_button"
+        android:layout_marginTop="@dimen/dimen_50dp"
+        android:layout_below="@id/line1"/>
+</RelativeLayout>

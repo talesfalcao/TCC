@@ -41,4 +41,5 @@ public class Constants {
     public static String current_latitude = "current_latitude";
     public static String current_longitude = "current_longitude";
     public static String userLoc = "userLoc";
+    public static String id = "id";
 }

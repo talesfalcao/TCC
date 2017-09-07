@@ -27,6 +27,7 @@ import com.example.tales.tcc.Constants;
 import com.example.tales.tcc.CustomDialog;
 import com.example.tales.tcc.R;
 import com.example.tales.tcc.User;
+import com.facebook.stetho.Stetho;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -40,6 +41,10 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.zxing.Result;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Map;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
@@ -54,6 +59,7 @@ public class LoginActivity extends AppCompatActivity implements ZXingScannerView
     boolean parent;
     private static LoginActivity instance = null;
     private ZXingScannerView mScannerView;
+    String name;
     
     private FirebaseAuth auth;
     FirebaseAuth.AuthStateListener mAuthListener;
@@ -66,7 +72,9 @@ public class LoginActivity extends AppCompatActivity implements ZXingScannerView
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Stetho.initializeWithDefaults(this);
         setContentView(R.layout.login_activity);
+
         instance = this;
         auth = FirebaseAuth.getInstance();
 
@@ -268,91 +276,132 @@ public class LoginActivity extends AppCompatActivity implements ZXingScannerView
                                         .show();
                             }
                         } else {
-                            String user = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                            final String user = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
                             DatabaseReference database = FirebaseDatabase.getInstance().getReference();
                             DatabaseReference ref = database.child(Constants.users).child(user);
 
                             ref.removeEventListener(valueEventListener);
 
-                            new SweetAlertDialog(LoginActivity.this, SweetAlertDialog.BUTTON_NEUTRAL)
-                                    .setTitleText("Is this a child or a parent device?")
-                                    .setCancelText("Child")
-                                    .setConfirmText("Parent")
-                                    .showCancelButton(true)
-                                    .setCancelClickListener(new SweetAlertDialog.OnSweetClickListener() {
-                                        @Override
-                                        public void onClick(SweetAlertDialog sDialog) {
-                                            parent = false;
+                            LayoutInflater li = LayoutInflater.from(LoginActivity.this);
+                            View promptsView = li.inflate(R.layout.new_password, null);
+
+                            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(LoginActivity.this);
+
+                            alertDialogBuilder.setView(promptsView);
+
+                            final TextView tv = (TextView) promptsView.findViewById(R.id.tv_pw);
+                            final EditText userEt = (EditText) promptsView.findViewById(R.id.et_pw);
+                            final Button register = (Button) promptsView.findViewById(R.id.register_button);
+
+                            tv.setText(R.string.what_is_your_name);
+                            userEt.setHint("Name");
+
+                            register.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    if(userEt.getText().toString().trim().isEmpty()) {
+                                        new SweetAlertDialog(LoginActivity.this, SweetAlertDialog.WARNING_TYPE)
+                                                .setTitleText("Whoops")
+                                                .setContentText("Make sure you've entered your name")
+                                                .setConfirmText("OK")
+                                                .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                                                    @Override
+                                                    public void onClick(SweetAlertDialog sDialog) {
+                                                        sDialog.dismiss();
+                                                    }
+                                                })
+                                                .show();
+                                    } else {
+                                        alertDialog.dismiss();
+                                        name = userEt.getText().toString();
+                                        new SweetAlertDialog(LoginActivity.this, SweetAlertDialog.BUTTON_NEUTRAL)
+                                                .setTitleText("Is this a child or a parent device?")
+                                                .setCancelText("Child")
+                                                .setConfirmText("Parent")
+                                                .showCancelButton(true)
+                                                .setCancelClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                                                    @Override
+                                                    public void onClick(SweetAlertDialog sDialog) {
+                                                        parent = false;
                                             /*CustomDialog fragment1 = new CustomDialog();
                                             Bundle args = new Bundle();
                                             args.putString("title", "Enter the family code");
                                             fragment1.setArguments(args);
                                             fragment1.show(getSupportFragmentManager(), "tag");*/
 
-                                            LayoutInflater li = LayoutInflater.from(LoginActivity.this);
-                                            View myView = li.inflate(R.layout.qrreader, null);
+                                                        LayoutInflater li = LayoutInflater.from(LoginActivity.this);
+                                                        View myView = li.inflate(R.layout.qrreader, null);
 
-                                            AlertDialog.Builder cDialog = new AlertDialog.Builder(LoginActivity.this);
-                                            cDialog.setView(myView);
-                                            cDialog.create();
-                                            sDialog.dismiss();
-                                            QrScanner(myView);
-                                        }
-                                    })
-                                    .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
-                                        @Override
-                                        public void onClick(SweetAlertDialog sDialog) {
-                                           sDialog
-                                                    .setTitleText("Now what?")
-                                                    .setContentText("Join a existing family or create a new one?")
-                                                    .setCancelText("Join")
-                                                    .setConfirmText("Create")
-                                                    .showCancelButton(true)
-                                                    .setCancelClickListener(new SweetAlertDialog.OnSweetClickListener() {
-                                                        @Override
-                                                        public void onClick(SweetAlertDialog sDialog) {
-                                                            parent = true;
+                                                        AlertDialog.Builder cDialog = new AlertDialog.Builder(LoginActivity.this);
+                                                        cDialog.setView(myView);
+                                                        cDialog.create();
+                                                        sDialog.dismiss();
+                                                        QrScanner(myView);
+                                                    }
+                                                })
+                                                .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                                                    @Override
+                                                    public void onClick(SweetAlertDialog sDialog) {
+                                                        sDialog
+                                                                .setTitleText("Now what?")
+                                                                .setContentText("Join a existing family or create a new one?")
+                                                                .setCancelText("Join")
+                                                                .setConfirmText("Create")
+                                                                .showCancelButton(true)
+                                                                .setCancelClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                                                                    @Override
+                                                                    public void onClick(SweetAlertDialog sDialog) {
+                                                                        parent = true;
                                                             /*CustomDialog fragment1 = new CustomDialog();
                                                             Bundle args = new Bundle();
                                                             args.putString("title", "Enter the family code");
                                                             fragment1.setArguments(args);
                                                             fragment1.show(getSupportFragmentManager(), "tag");*/
 
-                                                            LayoutInflater li = LayoutInflater.from(LoginActivity.this);
-                                                            View myView = li.inflate(R.layout.qrreader, null);
+                                                                        LayoutInflater li = LayoutInflater.from(LoginActivity.this);
+                                                                        View myView = li.inflate(R.layout.qrreader, null);
 
-                                                            AlertDialog.Builder cDialog = new AlertDialog.Builder(LoginActivity.this);
-                                                            cDialog.setView(myView);
-                                                            cDialog.create();
-                                                            sDialog.dismiss();
-                                                            QrScanner(myView);
-                                                        }
-                                                    })
-                                                    .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
-                                                        @Override
-                                                        public void onClick(SweetAlertDialog sDialog) {
-                                                            String id = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                                                                        AlertDialog.Builder cDialog = new AlertDialog.Builder(LoginActivity.this);
+                                                                        cDialog.setView(myView);
+                                                                        cDialog.create();
+                                                                        sDialog.dismiss();
+                                                                        QrScanner(myView);
+                                                                    }
+                                                                })
+                                                                .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                                                                    @Override
+                                                                    public void onClick(SweetAlertDialog sDialog) {
+                                                                        String id = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-                                                            DatabaseReference  database = FirebaseDatabase.getInstance().getReference();
+                                                                        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
 
-                                                            database.child(Constants.users).child(id).child(Constants.family).setValue(id);
-                                                            database.child(Constants.users).child(id).child(Constants.type).setValue(Constants.parent);
-                                                            database.child(Constants.users).child(id).child(Constants.logged).setValue("1");
+                                                                        database.child(Constants.users).child(id).child(Constants.family).setValue(id);
+                                                                        database.child(Constants.users).child(id).child(Constants.type).setValue(Constants.parent);
+                                                                        database.child(Constants.users).child(id).child(Constants.logged).setValue("1");
+                                                                        database.child(Constants.users).child(id).child(Constants.name).setValue(name);
 
-                                                            database.child(Constants.family).child(id).child(Constants.parent).child(id).child(Constants.firebase_token).setValue(FirebaseInstanceId.getInstance().getToken());
+                                                                        database.child(Constants.family).child(id).child(Constants.parent).child(id).child(Constants.firebase_token).setValue(FirebaseInstanceId.getInstance().getToken());
+                                                                        database.child(Constants.family).child(id).child(Constants.parent).child(id).child(Constants.name).setValue(name);
 
-                                                            getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putBoolean(Constants.logged, true).apply();
-                                                            getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putString(Constants.type, Constants.parent).apply();
-                                                            getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putString(Constants.family, id).apply();
-                                                            Intent intent = new Intent(LoginActivity.this, DrawerActivity.class);
-                                                            startActivity(intent);
-                                                            finish();
-                                                        }
-                                                    });
-                                        }
-                                    })
-                                    .show();
+                                                                        getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putBoolean(Constants.logged, true).apply();
+                                                                        getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putString(Constants.type, Constants.parent).apply();
+                                                                        getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putString(Constants.family, id).apply();
+                                                                        Intent intent = new Intent(LoginActivity.this, DrawerActivity.class);
+                                                                        startActivity(intent);
+                                                                        finish();
+                                                                    }
+                                                                });
+                                                    }
+                                                })
+                                                .show();
+                                    }
+                                }
+                            });
+
+                            alertDialogBuilder.setCancelable(true);
+                            alertDialog = alertDialogBuilder.create();
+                            alertDialog.show();
                         }
                     }
                 });
@@ -427,14 +476,17 @@ public class LoginActivity extends AppCompatActivity implements ZXingScannerView
     @Override
     public void onPause() {
         super.onPause();
-        mScannerView.stopCamera();
+        try {
+            mScannerView.stopCamera();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void handleResult(Result rawResult) {
         Log.e("handler", rawResult.getText()); // Prints scan results
-        Log.e("handler", rawResult.getBarcodeFormat().toString()); // Prints the scan format (qrcode)
-        String inputText = rawResult.getBarcodeFormat().toString();
+        String inputText = rawResult.getText();
 
         SharedPreferences sharedPreferences = getSharedPreferences(Constants.family, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -446,10 +498,12 @@ public class LoginActivity extends AppCompatActivity implements ZXingScannerView
 
         database.child(Constants.users).child(id).child(Constants.family).setValue(inputText);
         database.child(Constants.users).child(id).child(Constants.logged).setValue("1");
+        database.child(Constants.users).child(id).child(Constants.name).setValue(name);
         getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putBoolean(Constants.logged, true).apply();
         if(parent) {
             getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putString(Constants.type, Constants.parent).apply();
             database.child(Constants.family).child(inputText).child(Constants.parent).child(id).child(Constants.firebase_token).setValue(FirebaseInstanceId.getInstance().getToken());
+            database.child(Constants.family).child(inputText).child(Constants.parent).child(id).child(Constants.name).setValue(name);
             Intent i = new Intent(LoginActivity.this, DrawerActivity.class);
             i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(i);
@@ -459,11 +513,35 @@ public class LoginActivity extends AppCompatActivity implements ZXingScannerView
             getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE).edit().putString(Constants.type, Constants.child).apply();
             database.child(Constants.family).child(inputText).child(Constants.child).setValue(id);
             database.child(Constants.family).child(inputText).child(Constants.child).child(id).child(Constants.firebase_token).setValue(FirebaseInstanceId.getInstance().getToken());
+            database.child(Constants.family).child(inputText).child(Constants.child).child(id).child(Constants.name).setValue(name);
             Intent i = new Intent(LoginActivity.this, MainActivity.class);
             i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(i);
             LoginActivity.getInstance().finish();
             finish();
+        }
+    }
+
+    private void copyDataBase() {
+        try {
+            String DB_PATH = "";
+            String DB_NAME = "database.db";
+
+            DB_PATH = "/data/data/" + getPackageName() + "/databases/";
+
+            InputStream mInput = getAssets().open(DB_NAME);
+            String outFileName = DB_PATH + DB_NAME;
+            OutputStream mOutput = new FileOutputStream(outFileName);
+            byte[] mBuffer = new byte[1024];
+            int mLength;
+            while ((mLength = mInput.read(mBuffer)) > 0) {
+                mOutput.write(mBuffer, 0, mLength);
+            }
+            mOutput.flush();
+            mOutput.close();
+            mInput.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

@@ -137,6 +137,33 @@ public class PatternFinder {
                 }
             }
         }
+
+        if(!array.isEmpty()) {
+            return clusterPatters(array);
+        }
         return array;
+    }
+
+    private ArrayList<PatternsModel> clusterPatters(ArrayList<PatternsModel> array) {
+        ArrayList<PatternsModel> clusters = new ArrayList<>();
+        PatternsModel last = array.get(0);
+        clusters.add(last);
+
+        for(PatternsModel p : array) {
+            final Location a = new Location("");
+            final Location b = new Location("");
+            a.setLatitude(Double.parseDouble(last.getLatitude()));
+            a.setLongitude(Double.parseDouble(last.getLongitude()));
+            b.setLatitude(Double.parseDouble(p.getLatitude()));
+            b.setLongitude(Double.parseDouble(p.getLongitude()));
+
+            if(a.distanceTo(b) >= 300) {
+                clusters.add(p);
+            }
+
+            last = p;
+        }
+
+        return clusters;
     }
 }

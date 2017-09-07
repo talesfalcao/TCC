@@ -62,7 +62,7 @@ public class LocationService extends Service {
                     storeData(currentLocation);
                 }
             }
-        }, 0, 60000);
+        }, 0, /*300000*/60000);
     }
 
     private void storeData(Location currentLocation) {
@@ -77,10 +77,15 @@ public class LocationService extends Service {
         DatabaseReference database = FirebaseDatabase.getInstance().getReference();
         SharedPreferences sharedPreferences = getSharedPreferences(Constants.family, Context.MODE_PRIVATE);
         String result = sharedPreferences.getString(Constants.family, "");
-        String id = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String id;
+        try {
+            id = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        } catch (NullPointerException e) {
+            id = null;
+        }
         boolean inside = false;
 
-        if(instance != null) {
+        if(instance != null && id != null) {
             if (pattern.isEmpty()) {
                 //remove all patterns
                 database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.patterns).removeValue();
@@ -115,7 +120,12 @@ public class LocationService extends Service {
                 database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.patterns).removeValue();
                 database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.patterns).child("1").child(Constants.latitude).setValue(a.getLatitude());
                 database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.patterns).child("1").child(Constants.longitude).setValue(a.getLongitude());
-                database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.inside).setValue(inside);
+                if(!inside) {
+                    database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.inside).removeValue();
+                    database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.inside).setValue(false);
+                } else {
+                    database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.inside).setValue(true);
+                }
                 long time = System.currentTimeMillis()/1000;
                 database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.last_update).setValue(time);
                 database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.current_latitude).setValue(model.getLatitude());
@@ -128,8 +138,8 @@ public class LocationService extends Service {
                 });
 
                 int i = 1;
+                database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.patterns).removeValue();
                 for(PatternsModel p : pattern) {
-                    database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.patterns).removeValue();
                     database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.patterns).child(i + "").child(Constants.latitude).setValue(p.getLatitude());
                     database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.patterns).child(i + "").child(Constants.longitude).setValue(p.getLongitude());
                     i++;
@@ -147,13 +157,20 @@ public class LocationService extends Service {
                     }
                 }
 
-                database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.inside).setValue(inside);
+                if(!inside) {
+                    database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.inside).removeValue();
+                    database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.inside).setValue(false);
+                } else {
+                    database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.inside).setValue(true);
+                }
                 long time = System.currentTimeMillis()/1000;
                 database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.last_update).setValue(time);
                 database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.current_latitude).setValue(model.getLatitude());
                 database.child(Constants.family).child(result).child(Constants.child).child(id).child(Constants.current_longitude).setValue(model.getLongitude());
             }
         }
+
+        Log.d("Testing Service", inside + " <- INSIDE OR NOT??");
         Log.d("Testing Service", model.toString());
         model.insertLocation(LocationService.this);
         AveragesFinder.getInstance(this).addToAverages(model);

@@ -30,7 +30,8 @@
         </activity>
         <activity android:name=".activities.DecideActivity" />
         <activity android:name=".activities.MainActivity" />
-        <activity android:name=".activities.DrawerActivity" />
+        <activity android:name=".activities.DrawerActivity"
+            android:launchMode="singleTop"/>
 
         <service android:name=".services.LocationService" />
         <service
@@ -57,6 +58,19 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/colorAccent" />
+
+        <receiver
+            android:name=".receivers.AdminReceiver"
+            android:label="@string/device_admin"
+            android:description="@string/device_admin_description"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/policies" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
