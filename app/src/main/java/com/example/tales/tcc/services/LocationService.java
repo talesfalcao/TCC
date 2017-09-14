@@ -20,6 +20,7 @@ import com.example.tales.tcc.PatternFinder;
 import com.example.tales.tcc.activities.MainActivity;
 import com.example.tales.tcc.db.LocationModel;
 import com.example.tales.tcc.db.PatternsModel;
+import com.example.tales.tcc.db.UserSetPatternModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -37,7 +38,6 @@ import java.util.TimerTask;
 
 public class LocationService extends Service {
     public static final String[] days = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-    public static boolean en = false;
 
     @Nullable
     @Override
@@ -56,10 +56,16 @@ public class LocationService extends Service {
         myTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                Location currentLocation = getLastBestLocation();
+                SharedPreferences sharedPreferences = getSharedPreferences(Constants.family, Context.MODE_PRIVATE);
+                if(!(sharedPreferences.getBoolean("disable", false))) {
+                    Location currentLocation = getLastBestLocation();
 
-                if(currentLocation != null) {
-                    storeData(currentLocation);
+                    if (currentLocation != null) {
+                        storeData(currentLocation);
+                    }
+                    Log.d("ENABLEEED", "EEEEED");
+                } else {
+                    Log.d("DISABLEEED", "EEEEED");
                 }
             }
         }, 0, /*300000*/60000);

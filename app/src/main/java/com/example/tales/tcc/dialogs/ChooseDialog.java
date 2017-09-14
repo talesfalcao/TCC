@@ -1,4 +1,4 @@
-package com.example.tales.tcc;
+package com.example.tales.tcc.dialogs;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -12,6 +12,7 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.tales.tcc.R;
 import com.example.tales.tcc.activities.DrawerActivity;
 import com.example.tales.tcc.adapters.ChooseAdapter;
 import com.example.tales.tcc.db.UserLocModel;
@@ -49,23 +50,9 @@ public class ChooseDialog extends Dialog {
         yes.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(adapter.getSelected().isEmpty()) {
-                    new SweetAlertDialog(c, SweetAlertDialog.ERROR_TYPE)
-                            .setTitleText("Whoops!")
-                            .setContentText("Select at least one child")
-                            .setConfirmText("OK")
-                            .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
-                                @Override
-                                public void onClick(SweetAlertDialog sDialog) {
-                                    sDialog.dismiss();
-                                }
-                            })
-                            .show();
-                } else {
-                    DrawerActivity.instance.selected.clear();
-                    DrawerActivity.instance.selected.addAll(adapter.getSelected());
-                    ChooseDialog.this.dismiss();
-                }
+                DrawerActivity.instance.selected.clear();
+                DrawerActivity.instance.selected.addAll(adapter.getSelected());
+                ChooseDialog.this.dismiss();
             }
         });
 

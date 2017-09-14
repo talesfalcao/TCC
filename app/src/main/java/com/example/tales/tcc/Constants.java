@@ -42,4 +42,7 @@ public class Constants {
     public static String current_longitude = "current_longitude";
     public static String userLoc = "userLoc";
     public static String id = "id";
+    public static String setPattern= "setPattern";
+    public static String userSetPatterns = "userSetPatterns";
+    public static String disable = "disable";
 }

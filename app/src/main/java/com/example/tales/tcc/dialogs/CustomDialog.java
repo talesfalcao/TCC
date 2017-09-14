@@ -1,4 +1,4 @@
-package com.example.tales.tcc;
+package com.example.tales.tcc.dialogs;
 
 import android.app.Dialog;
 import android.graphics.Color;
@@ -15,6 +15,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.tales.tcc.R;
 
 /**
  * Created by tales on 13/06/2017.

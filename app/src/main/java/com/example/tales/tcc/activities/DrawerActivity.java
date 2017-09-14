@@ -1,22 +1,24 @@
 package com.example.tales.tcc.activities;
 
-import android.app.Dialog;
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.media.Image;
+import android.location.Location;
+import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
@@ -26,26 +28,24 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.tales.tcc.ChooseDialog;
+import com.example.tales.tcc.dialogs.ChooseDialog;
 import com.example.tales.tcc.Constants;
 import com.example.tales.tcc.DrawerAdapter;
 import com.example.tales.tcc.PatternFinder;
 import com.example.tales.tcc.R;
 import com.example.tales.tcc.db.AveragesModel;
-import com.example.tales.tcc.db.LocationModel;
 import com.example.tales.tcc.db.PatternsModel;
 import com.example.tales.tcc.db.UserLocModel;
+import com.example.tales.tcc.dialogs.TimeDialog;
 import com.example.tales.tcc.services.LocationService;
+import com.facebook.stetho.server.http.HttpStatus;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -54,23 +54,19 @@ import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
 
@@ -90,7 +86,7 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
     SupportMapFragment mapFragment;
     public ArrayList<UserLocModel> selected = new ArrayList<>();
     public static DrawerActivity instance = null;
-
+    private LatLng lastLatLng;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -166,16 +162,13 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
     }
 
     private void addDrawerItems() {
-        if(LocationService.en) {
-            array.add("Enable inspection");
-        } else {
-            array.add("Disable inspection");
-        }
+        array.add("Disable inspection");
         array.add("Block Device");
         array.add("Insert Pattern");
         array.add("Wipe Device");
         array.add("Share family code");
         array.add("Logout");
+
         mAdapter = new DrawerAdapter(this, array);
         mDrawerList.setAdapter(mAdapter);
         mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -183,44 +176,29 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 switch (position) {
                     case 0:
-                        LocationService.en = !LocationService.en;
-                        if(!LocationService.en) {
-                            ((TextView)view.findViewById(R.id.tv_cell)).setText("Enable inspection");
-                            new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.WARNING_TYPE)
-                                    .setTitleText("Enable inspection?")
-                                    .setContentText("Once done, you will receive updates from this child again!")
-                                    .setConfirmText("Enable!")
-                                    .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
-                                        @Override
-                                        public void onClick(SweetAlertDialog sDialog) {
-                                            sDialog
-                                                    .setTitleText("Done!")
-                                                    .setContentText("Inspections enabled")
-                                                    .setConfirmText("OK")
-                                                    .setConfirmClickListener(null)
-                                                    .changeAlertType(SweetAlertDialog.SUCCESS_TYPE);
-                                        }
-                                    })
-                                    .show();
-                        } else {
-                            ((TextView)view.findViewById(R.id.tv_cell)).setText("Disable inspection");
-                            new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.WARNING_TYPE)
-                                    .setTitleText("Disable inspection?")
-                                    .setContentText("Once done, you will no longer receive updates from this child!")
-                                    .setConfirmText("Disable!")
-                                    .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
-                                        @Override
-                                        public void onClick(SweetAlertDialog sDialog) {
-                                            sDialog
-                                                    .setTitleText("Done!")
-                                                    .setContentText("Inspections disabled")
-                                                    .setConfirmText("OK")
-                                                    .setConfirmClickListener(null)
-                                                    .changeAlertType(SweetAlertDialog.SUCCESS_TYPE);
-                                        }
-                                    })
-                                    .show();
-                        }
+                        ChooseDialog choose1 = new ChooseDialog(DrawerActivity.this);
+                        choose1.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                            @Override
+                            public void onDismiss(DialogInterface dialog) {
+                                new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.WARNING_TYPE)
+                                        .setTitleText("Are you sure?")
+                                        .setContentText("Enable and disable inspections based on the selections made?")
+                                        .setConfirmText("Do it!")
+                                        .setCancelText("Not now")
+                                        .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                                            @Override
+                                            public void onClick(SweetAlertDialog sDialog) {
+                                                sDialog.dismiss();
+                                                disableInspection();
+                                            }
+                                        })
+                                        .show();
+
+
+                            }
+                        });
+                        choose1.show();
+
                         break;
                     case 1:
                         ChooseDialog choose = new ChooseDialog(DrawerActivity.this);
@@ -248,26 +226,22 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
                                     alertDialogBuilder.setCancelable(true);
                                     alertDialog = alertDialogBuilder.create();
                                     alertDialog.show();
+                                } else {
+                                    new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.ERROR_TYPE)
+                                            .setTitleText("Whoops!")
+                                            .setContentText("Select at least one child")
+                                            .setConfirmText("OK")
+                                            .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                                                @Override
+                                                public void onClick(SweetAlertDialog sDialog) {
+                                                    sDialog.dismiss();
+                                                }
+                                            })
+                                            .show();
                                 }
                             }
                         });
                         choose.show();
-                       /* new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.WARNING_TYPE)
-                                .setTitleText("Block device")
-                                .setContentText("Block the child device with a password")
-                                .setConfirmText("Block it!")
-                                .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
-                                    @Override
-                                    public void onClick(SweetAlertDialog sDialog) {
-                                        sDialog
-                                                .setTitleText("Done!")
-                                                .setContentText("Device blocked!")
-                                                .setConfirmText("OK")
-                                                .setConfirmClickListener(null)
-                                                .changeAlertType(SweetAlertDialog.SUCCESS_TYPE);
-                                    }
-                                })
-                                .show();*/
                         break;
                     case 2:
                         new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.WARNING_TYPE)
@@ -363,6 +337,52 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
         });
     }
 
+    private void disableInspection() {
+        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+        SharedPreferences sharedPreferences = getSharedPreferences(Constants.family, Context.MODE_PRIVATE);
+        String family = sharedPreferences.getString(Constants.family, "");
+        if(!family.isEmpty()) {
+            ArrayList<UserLocModel> array = UserLocModel.getAllLocations(this);
+            ArrayList<String> allIds = new ArrayList<>();
+            ArrayList<String> selectedIds = new ArrayList<>();
+            for(UserLocModel user : array) {
+                allIds.add(user.id);
+            }
+            for(UserLocModel u : selected) {
+                selectedIds.add(u.id);
+            }
+
+            for(String u : allIds) {
+                database.child(Constants.family).child(family).child(Constants.child).child(u).child(Constants.disable).setValue(selectedIds.contains(u));
+            }
+
+            new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.SUCCESS_TYPE)
+                    .setTitleText("Done!")
+                    .setContentText("Inspections preferences successfully changed")
+                    .setConfirmText("OK")
+                    .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sDialog) {
+                            sDialog.dismiss();
+                        }
+                    })
+                    .show();
+        } else {
+            new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.ERROR_TYPE)
+                    .setTitleText("Whoops!")
+                    .setContentText("Unexpected error")
+                    .setConfirmText("OK!")
+                    .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sDialog) {
+                            sDialog.dismiss();
+                        }
+                    })
+                    .show();
+        }
+        selected.clear();
+    }
+
     private void lockPw(String pw) {
         if(pw.length() < 4 && !pw.isEmpty()) {
             new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.ERROR_TYPE)
@@ -400,7 +420,7 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
             } else {
                 new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.ERROR_TYPE)
                         .setTitleText("Whoops!")
-                        .setContentText("Unexpected errer")
+                        .setContentText("Unexpected error")
                         .setConfirmText("OK!")
                         .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                             @Override
@@ -411,6 +431,7 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
                         .show();
             }
         }
+        selected.clear();
     }
 
     @Override
@@ -431,23 +452,23 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.clear();
-        AveragesModel lastOne = AveragesModel.getLastAverage(DrawerActivity.this);
+        Location lastOne = getDeviceLocation();
         if(lastOne != null) {
             LatLng pos = new LatLng(lastOne.getLatitude(), lastOne.getLongitude());
 
-            mMap.addMarker(new MarkerOptions().position(pos).title("Last location").icon(vectorToBitmap(R.drawable.ic_person_pin_circle_black, Color.parseColor("#FF7755"))));
+            mMap.addMarker(new MarkerOptions().position(pos).title("You").icon(vectorToBitmap(R.drawable.ic_person_pin_circle_black, Color.parseColor("#FF7755"))));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(pos));
             mMap.animateCamera(CameraUpdateFactory.zoomTo(13.5f));
         }
         final String[] stamp = LocationService.parseTimeStamp();
         final int bottom = (Integer.parseInt(stamp[2]) / 15) * 15;
 
-        final ArrayList<PatternsModel> patterns = PatternFinder.getInstance(DrawerActivity.this).findPattern(stamp[3], bottom);
+        final ArrayList<PatternsModel> patterns = PatternsModel.getPattern(this, stamp[3], String.valueOf(bottom));
 
         if (!patterns.isEmpty()) {
             for (PatternsModel pattern : patterns) {
                 LatLng pat = new LatLng(Double.parseDouble(pattern.getLatitude()), Double.parseDouble(pattern.getLongitude()));
-                mMap.addMarker(new MarkerOptions().position(pat).title("Pattern").icon(vectorToBitmap(R.drawable.ic_locale, Color.parseColor("#FF0000"))));
+                mMap.addMarker(new MarkerOptions().position(pat).title("Pattern").icon(vectorToBitmap(R.drawable.ic_locale, Color.parseColor("#AA00AA"))));
             }
         }
 
@@ -466,6 +487,42 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
                 mMap.addMarker(new MarkerOptions().position(pat).title("Average").icon(vectorToBitmap(R.drawable.ic_locale, Color.parseColor("#0000FF"))));
             }
         }*/
+
+        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+            @Override
+            public void onMapLongClick(LatLng latLng) {
+                lastLatLng = latLng;
+                TimeDialog picker = new TimeDialog(DrawerActivity.this);
+                picker.show();
+            }
+        });
+    }
+
+    private Location getDeviceLocation() {
+            LocationManager mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return null;
+            }
+            Location locationGPS = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            Location locationNet = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+
+            long GPSLocationTime = 0;
+            if (null != locationGPS) {
+                GPSLocationTime = locationGPS.getTime();
+            }
+
+            long NetLocationTime = 0;
+
+            if (null != locationNet) {
+                NetLocationTime = locationNet.getTime();
+            }
+
+            if ( 0 < GPSLocationTime - NetLocationTime ) {
+                return locationGPS;
+            } else {
+                return locationNet;
+            }
     }
 
     /**
@@ -504,5 +561,71 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
         Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         bitmap.setPixels(pixels, 0, 300, 0, 0, w, h);
         return bitmap;
+    }
+
+    public void setPatternDateTime(final String day, final String starthours, final String startminutes, final String endhours, final String endminutes) {
+        ChooseDialog choose = new ChooseDialog(DrawerActivity.this);
+        choose.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                if(!selected.isEmpty()) {
+                        Log.d(day, starthours + ":" + startminutes + " TO " + endhours + ":" + endminutes);
+                        Log.d(lastLatLng.latitude + "", lastLatLng.longitude + "");
+
+                        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+                        SharedPreferences sharedPreferences = getSharedPreferences(Constants.family, Context.MODE_PRIVATE);
+                        String family = sharedPreferences.getString(Constants.family, "");
+                        if(!family.isEmpty()) {
+                            for(UserLocModel user : selected) {
+                                int start = Integer.valueOf(starthours) * 60;
+                                start += Integer.valueOf(startminutes);
+                                int end = Integer.valueOf(endhours) * 60;
+                                end += Integer.valueOf(endminutes);
+                                String save = "LAT=" + lastLatLng.latitude + "LONG=" + lastLatLng.longitude + "DAY=" + day + "START=" + start + "END=" + end;
+                                database.child(Constants.family).child(family).child(Constants.child).child(user.id).child(Constants.setPattern).setValue(save);
+                            }
+
+                            new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.SUCCESS_TYPE)
+                                    .setTitleText("Done!")
+                                    .setContentText("Pattern has been successfully set")
+                                    .setConfirmText("OK")
+                                    .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                                        @Override
+                                        public void onClick(SweetAlertDialog sDialog) {
+                                            sDialog.dismiss();
+                                        }
+                                    })
+                                    .show();
+                        } else {
+                            new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.ERROR_TYPE)
+                                    .setTitleText("Whoops!")
+                                    .setContentText("Unexpected error")
+                                    .setConfirmText("OK!")
+                                    .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                                        @Override
+                                        public void onClick(SweetAlertDialog sDialog) {
+                                            sDialog.dismiss();
+                                        }
+                                    })
+                                    .show();
+                        }
+                    } else {
+                        new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.ERROR_TYPE)
+                                .setTitleText("Whoops!")
+                                .setContentText("Select at least one child")
+                                .setConfirmText("OK")
+                                .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                                    @Override
+                                    public void onClick(SweetAlertDialog sDialog) {
+                                        sDialog.dismiss();
+                                    }
+                                })
+                                .show();
+                    }
+                selected.clear();
+            }
+        });
+        choose.show();
+
     }
 }

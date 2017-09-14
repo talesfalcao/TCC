@@ -99,6 +99,15 @@ public class PatternsModel {
         return i;
     }
 
+    public static int deleteAllByWeekdayHour(Context context, String weekday, String bottom) {
+        int i;
+        PatternsDatasource patternsDatasource = new PatternsDatasource(context);
+        patternsDatasource.open();
+        i = patternsDatasource.delete(Constants.weekday + "=? AND " + Constants.start_time + "=?", new String[]{weekday, bottom});
+        patternsDatasource.close();
+        return i;
+    }
+
     public static ArrayList<PatternsModel> getPattern(Context context, String weekday, String bottom) {
         ArrayList<PatternsModel> patterns;
         PatternsDatasource patternsDatasource = new PatternsDatasource(context);

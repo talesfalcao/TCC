@@ -33,4 +33,9 @@
     <string name="choose_devices">Choose whose device will receive this action</string>
     <string name="out">Out</string>
     <string name="inside">Inside</string>
+    <string name="time">Time</string>
+    <string name="select_time_day">Select the day of the week and the start/end time</string>
+    <string name="start_time">Start Time</string>
+    <string name="end_time">End Time</string>
+    <string name="day">Day</string>
 </resources>

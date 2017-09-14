@@ -7,21 +7,27 @@ import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.tales.tcc.Constants;
 import com.example.tales.tcc.R;
 import com.example.tales.tcc.activities.DrawerActivity;
 import com.example.tales.tcc.activities.MainActivity;
+import com.example.tales.tcc.db.PatternsModel;
 import com.example.tales.tcc.db.UserLocModel;
+import com.example.tales.tcc.db.UserSetPatternModel;
 import com.example.tales.tcc.receivers.AdminReceiver;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 import java.util.Map;
+
+import static com.example.tales.tcc.services.LocationService.parseTimeStamp;
 
 /**
  * Created by tales on 07/08/2017.
@@ -47,7 +53,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         } else {
             Log.d(TAG, "AAAAAAAAAA");
             Map<String, String> map = remoteMessage.getData();
-            String id = "", lat = "", lon = "", pats = "", name = "", inside = "", password = "";
+            String id = "", lat = "", lon = "", pats = "", name = "", inside = "", password = "", patternstr = "", disable = "";
             for (Map.Entry<String,String> entry : map.entrySet()) {
                 String key = entry.getKey();
                 String value = entry.getValue();
@@ -75,20 +81,63 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     case "password":
                         password = value;
                         break;
+                    case "setPattern":
+                        patternstr = value;
+                        break;
+                    case "disable":
+                        disable = value;
+                        break;
                 }
             }
 
             if(id.isEmpty()) {
-                password = password.substring(3);
-                if(password.isEmpty()){
-                    removePassword();
-                } else {
-                    lockPassword(password);
+                if(!password.isEmpty()) {
+                    password = password.substring(3);
+                    Log.d(TAG, "PASSWORD: " + password);
+                    if (password.isEmpty()) {
+                        removePassword();
+                    } else {
+                        lockPassword(password);
+                    }
+                }
+                if(!patternstr.isEmpty()) {
+                    String[] split1 = patternstr.split("LAT=");
+                    String[] split2 = split1[1].split("LONG=");
+                    String[] split3 = split2[1].split("DAY=");
+                    String[] split4 = split3[1].split("START=");
+                    String[] split5 = split4[1].split("END=");
+                    String newLat = split2[0];
+                    String newLon = split3[0];
+                    String day = split4[0];
+                    String start = split5[0];
+                    String end = split5[1];
+
+                    UserSetPatternModel model = new UserSetPatternModel(start, end, day, newLat, newLon);
+                    model.insertLocation(this);
+
+                    Log.d(TAG, "dgs");
+                }
+                if(!disable.isEmpty()) {
+                    SharedPreferences sharedPreferences = getSharedPreferences(Constants.family, Context.MODE_PRIVATE);
+                    sharedPreferences.edit().putBoolean("disable", disable.equals("true")).apply();
+                    Log.d(TAG, "aaa" + disable);
                 }
             } else {
                 Log.d(TAG, "Message Data Body: " + name + " " + lat + "  :  " + lon + " Inside > " + inside);
                 Log.d(TAG, "PATTERNS: " + pats);
 
+                final String[] stamp = parseTimeStamp();
+                final int bottom = (Integer.parseInt(stamp[2]) / 15) * 15;
+
+                String[] split1 = pats.split("latitude");
+                PatternsModel.deleteAllByWeekdayHour(this, stamp[3], bottom + "");
+                for(String s : split1) {
+                    if(!s.isEmpty()) {
+                        String[] res = s.split("longitude");
+                        UserSetPatternModel p = new UserSetPatternModel(stamp[3], bottom + "", (bottom + 15) + "", res[0], res[1]);
+                        p.insertLocation(this);
+                    }
+                }
                 UserLocModel.deleteName(this, id);
                 UserLocModel model = new UserLocModel(id, name, lat, lon, inside);
                 model.insertLocation(this);

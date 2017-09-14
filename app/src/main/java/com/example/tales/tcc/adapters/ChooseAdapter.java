@@ -74,7 +74,7 @@ public class ChooseAdapter extends BaseAdapter {
         }
 
         final View finalConvertView = convertView;
-        convertView.findViewById(R.id.checked).setOnClickListener(new View.OnClickListener() {
+        convertView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(isSelected(dataModel)) {
