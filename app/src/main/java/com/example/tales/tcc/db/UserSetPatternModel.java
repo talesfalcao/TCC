@@ -12,9 +12,10 @@ import java.util.ArrayList;
  */
 
 public class UserSetPatternModel {
-    public String mStart, mEnd, mDay, mLatitude, mLongitude;
+    public String mUser, mStart, mEnd, mDay, mLatitude, mLongitude;
 
-    public UserSetPatternModel(String start, String end, String day, String latitude, String longitude) {
+    public UserSetPatternModel(String user, String start, String end, String day, String latitude, String longitude) {
+        this.mUser = user;
         this.mStart = start;
         this.mEnd = end;
         this.mLatitude = latitude;
@@ -43,6 +44,15 @@ public class UserSetPatternModel {
         UserSetPatternDatasource locationDatasource = new UserSetPatternDatasource(context);
         locationDatasource.open();
         locations = locationDatasource.getLocations(Constants.weekday + "=?", new String[]{s});
+        locationDatasource.close();
+        return locations;
+    }
+
+    public static int delete(Context context, String s, String[] args) {
+        int locations;
+        UserSetPatternDatasource locationDatasource = new UserSetPatternDatasource(context);
+        locationDatasource.open();
+        locations = locationDatasource.delete(s, args);
         locationDatasource.close();
         return locations;
     }

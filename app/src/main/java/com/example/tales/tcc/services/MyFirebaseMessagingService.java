@@ -2,7 +2,6 @@ package com.example.tales.tcc.services;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -12,12 +11,10 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.example.tales.tcc.Constants;
 import com.example.tales.tcc.R;
 import com.example.tales.tcc.activities.DrawerActivity;
-import com.example.tales.tcc.activities.MainActivity;
 import com.example.tales.tcc.db.PatternsModel;
 import com.example.tales.tcc.db.UserLocModel;
 import com.example.tales.tcc.db.UserSetPatternModel;
@@ -51,9 +48,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             // message, here is where that should be initiated. See sendNotification method below.
             sendNotification(notificationTitle, notificationBody);
         } else {
-            Log.d(TAG, "AAAAAAAAAA");
             Map<String, String> map = remoteMessage.getData();
-            String id = "", lat = "", lon = "", pats = "", name = "", inside = "", password = "", patternstr = "", disable = "";
+            String id = "", lat = "", lon = "", pats = "", name = "", inside = "", password = "", patternstr = "", disable = "", removePattern = "";
             for (Map.Entry<String,String> entry : map.entrySet()) {
                 String key = entry.getKey();
                 String value = entry.getValue();
@@ -84,6 +80,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     case "setPattern":
                         patternstr = value;
                         break;
+                    case "removePattern":
+                        removePattern = value;
+                        break;
                     case "disable":
                         disable = value;
                         break;
@@ -101,18 +100,20 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     }
                 }
                 if(!patternstr.isEmpty()) {
-                    String[] split1 = patternstr.split("LAT=");
+                    String[] split0 = patternstr.split("USR=");
+                    String[] split1 = split0[1].split("LAT=");
                     String[] split2 = split1[1].split("LONG=");
                     String[] split3 = split2[1].split("DAY=");
                     String[] split4 = split3[1].split("START=");
                     String[] split5 = split4[1].split("END=");
+                    String usr = split1[0];
                     String newLat = split2[0];
                     String newLon = split3[0];
                     String day = split4[0];
                     String start = split5[0];
                     String end = split5[1];
 
-                    UserSetPatternModel model = new UserSetPatternModel(start, end, day, newLat, newLon);
+                    UserSetPatternModel model = new UserSetPatternModel(usr, start, end, day, newLat, newLon);
                     model.insertLocation(this);
 
                     Log.d(TAG, "dgs");
@@ -121,6 +122,25 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     SharedPreferences sharedPreferences = getSharedPreferences(Constants.family, Context.MODE_PRIVATE);
                     sharedPreferences.edit().putBoolean("disable", disable.equals("true")).apply();
                     Log.d(TAG, "aaa" + disable);
+                }
+                if(!removePattern.isEmpty()) {
+                    String[] split0 = removePattern.split("USR=");
+                    String[] split1 = split0[1].split("LAT=");
+                    String[] split2 = split1[1].split("LONG=");
+                    String[] split3 = split2[1].split("DAY=");
+                    String[] split4 = split3[1].split("START=");
+                    String[] split5 = split4[1].split("END=");
+                    String usr = split1[0];
+                    String newLat = split2[0];
+                    String newLon = split3[0];
+                    String day = split4[0];
+                    String start = split5[0];
+                    String end = split5[1];
+
+                    int i = UserSetPatternModel.delete(this, Constants.id + "=? AND " + Constants.latitude + "=? AND " + Constants.longitude + "=? AND " + Constants.weekday + "=? AND " +
+                            Constants.start_time + "=? AND " + Constants.end_time + "=?", new String[] {usr, newLat, newLon, day, start, end});
+
+                    Log.d("DELETE PATTERN", i + " pats deleted");
                 }
             } else {
                 Log.d(TAG, "Message Data Body: " + name + " " + lat + "  :  " + lon + " Inside > " + inside);
@@ -134,8 +154,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 for(String s : split1) {
                     if(!s.isEmpty()) {
                         String[] res = s.split("longitude");
-                        UserSetPatternModel p = new UserSetPatternModel(stamp[3], bottom + "", (bottom + 15) + "", res[0], res[1]);
-                        p.insertLocation(this);
+                        PatternsModel p = new PatternsModel(stamp[3], bottom + "", (bottom + 15) + "", res[0], res[1]);
+                        p.insertPattern(this);
                     }
                 }
                 UserLocModel.deleteName(this, id);
@@ -156,7 +176,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(this)
                 .setAutoCancel(true)   //Automatically delete the notification
-                .setSmallIcon(R.mipmap.ic_launcher) //Notification icon
+                .setSmallIcon(R.drawable.ic_action_name) //Notification icon
                 .setContentIntent(pendingIntent)
                 .setContentTitle(notificationTitle)
                 .setContentText(notificationBody)
@@ -174,7 +194,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         devicePolicyManager.setPasswordQuality(
                 demoDeviceAdmin,DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
-        devicePolicyManager.setPasswordMinimumLength(demoDeviceAdmin, 5);
+        devicePolicyManager.setPasswordMinimumLength(demoDeviceAdmin, 4);
 
         boolean result = devicePolicyManager.resetPassword(pw,
                 DevicePolicyManager.RESET_PASSWORD_REQUIRE_ENTRY);

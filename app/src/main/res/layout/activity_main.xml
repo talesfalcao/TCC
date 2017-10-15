@@ -21,12 +21,24 @@
             android:id="@+id/button"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:src="@drawable/ic_logout"
+            android:src="@drawable/ic_refresh"
             android:background="@drawable/white_circle_background"
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
             android:layout_marginBottom="10dp"
             android:layout_marginRight="10dp"
+            android:padding="@dimen/dimen_10dp"/>
+
+        <ImageView
+            android:id="@+id/button2"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/ic_logout"
+            android:background="@drawable/white_circle_background"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="10dp"
             android:padding="@dimen/dimen_10dp"/>
     </RelativeLayout>
 

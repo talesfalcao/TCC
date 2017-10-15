@@ -11,10 +11,11 @@
     <ImageView
         android:id="@+id/imageView"
         android:layout_marginTop="@dimen/dimen_50dp"
-        android:layout_width="@dimen/dimen_150dp"
+        android:layout_width="match_parent"
         android:layout_height="@dimen/dimen_150dp"
         android:layout_centerHorizontal="true"
-        app:srcCompat="@drawable/ic_firebase_icon" />
+        android:scaleType="centerInside"
+        app:srcCompat="@drawable/logo" />
 
     <EditText
         android:id="@+id/et_login"

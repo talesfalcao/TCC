@@ -39,6 +39,7 @@ import com.example.tales.tcc.db.AveragesModel;
 import com.example.tales.tcc.db.LocationModel;
 import com.example.tales.tcc.db.PatternsModel;
 import com.example.tales.tcc.db.UserLocModel;
+import com.example.tales.tcc.db.UserSetPatternModel;
 import com.example.tales.tcc.dialogs.CustomDialog;
 import com.example.tales.tcc.dialogs.TimeDialog;
 import com.example.tales.tcc.receivers.AdminReceiver;
@@ -51,6 +52,9 @@ import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
@@ -172,6 +176,17 @@ public class MainActivity extends AppCompatActivity implements CustomDialog.Edit
 
         ImageView button = (ImageView) findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String id = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+                DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+                database.child(Constants.users).child(id).child(Constants.pattern).setValue(Math.random());
+                mapFragment.getMapAsync(MainActivity.this);
+            }
+        });
+        ImageView button2 = (ImageView) findViewById(R.id.button2);
+        button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 logout = true;
@@ -307,12 +322,28 @@ public class MainActivity extends AppCompatActivity implements CustomDialog.Edit
         final String[] stamp = LocationService.parseTimeStamp();
         final int bottom = (Integer.parseInt(stamp[2]) / 15) * 15;
 
-        final ArrayList<PatternsModel> patterns = PatternFinder.getInstance(MainActivity.this).findPattern(stamp[3], bottom);
+        final ArrayList<UserSetPatternModel> userSet = UserSetPatternModel.getLocationsDay(this, stamp[3]);
+        ArrayList<UserSetPatternModel> ret = new ArrayList<>();
+        if(!userSet.isEmpty()) {
+            for(UserSetPatternModel u : userSet) {
+                if(Integer.parseInt(u.mStart) <= bottom && Integer.parseInt(u.mEnd) > (bottom + 15)) {
+                    ret.add(u);
+                }
+            }
+        }
 
-        if (!patterns.isEmpty()) {
-            for (PatternsModel pattern : patterns) {
-                LatLng pat = new LatLng(Double.parseDouble(pattern.getLatitude()), Double.parseDouble(pattern.getLongitude()));
-                mMap.addMarker(new MarkerOptions().position(pat).title("Pattern").icon(vectorToBitmap(R.drawable.ic_locale, Color.parseColor("#AA00AA"))));
+        if (!ret.isEmpty()) {
+            for (UserSetPatternModel pattern : ret) {
+                LatLng pat = new LatLng(Double.parseDouble(pattern.mLatitude), Double.parseDouble(pattern.mLongitude));
+                mMap.addMarker(new MarkerOptions().position(pat).title("User-set Pattern").icon(vectorToBitmap(R.drawable.ic_locale, Color.parseColor("#AA00AA"))));
+            }
+        } else {
+            final ArrayList<PatternsModel> patterns = PatternFinder.getInstance(this).findPattern(stamp[3], (bottom));
+            if (!patterns.isEmpty()) {
+                for (PatternsModel pattern : patterns) {
+                    LatLng pat = new LatLng(Double.parseDouble(pattern.getLatitude()), Double.parseDouble(pattern.getLongitude()));
+                    mMap.addMarker(new MarkerOptions().position(pat).title("Pattern").icon(vectorToBitmap(R.drawable.ic_locale, Color.parseColor("#43AAA2"))));
+                }
             }
         }
 

@@ -17,7 +17,7 @@ import java.util.ArrayList;
 public class UserSetPatternDatasource {
     private SQLiteDatabase database;
     private SQLiteHelper dbHelper;
-    private String[] allColumns = {Constants.start_time, Constants.end_time, Constants.weekday, Constants.latitude, Constants.longitude };
+    private String[] allColumns = {Constants.id, Constants.start_time, Constants.end_time, Constants.weekday, Constants.latitude, Constants.longitude };
 
     public UserSetPatternDatasource(Context context) {
         dbHelper = new SQLiteHelper(context);
@@ -33,6 +33,7 @@ public class UserSetPatternDatasource {
 
     public void insert(UserSetPatternModel location) {
         ContentValues values = new ContentValues();
+        values.put(Constants.id, location.mUser);
         values.put(Constants.start_time, location.mStart);
         values.put(Constants.end_time, location.mEnd);
         values.put(Constants.weekday, location.mDay);
@@ -49,7 +50,8 @@ public class UserSetPatternDatasource {
 
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
-            UserSetPatternModel location = new UserSetPatternModel(cursor.getString(cursor.getColumnIndex(Constants.start_time)),
+            UserSetPatternModel location = new UserSetPatternModel(cursor.getString(cursor.getColumnIndex(Constants.id)),
+                    cursor.getString(cursor.getColumnIndex(Constants.start_time)),
                     cursor.getString(cursor.getColumnIndex(Constants.end_time)),
                     cursor.getString(cursor.getColumnIndex(Constants.weekday)),
                     cursor.getString(cursor.getColumnIndex(Constants.latitude)),

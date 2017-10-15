@@ -94,19 +94,21 @@ public class PatternFinder {
         boolean inserted = false;
         ArrayList<PatternsModel> array = new ArrayList<>();
         int bottom = ((int) hour / 15) * 15;
-        if(!PatternsModel.getPattern(mContext, day, bottom + "").isEmpty()) {
-            ArrayList<UserSetPatternModel> userSet = UserSetPatternModel.getLocationsDay(mContext, day);
-            if(!userSet.isEmpty()) {
-                ArrayList<PatternsModel> ret = new ArrayList<>();
-                for(UserSetPatternModel u : userSet) {
-                    if(Integer.parseInt(u.mStart) <= bottom && Integer.parseInt(u.mEnd) > (bottom + 15)) {
-                        PatternsModel pat = new PatternsModel(day, String.valueOf(bottom), String.valueOf(bottom + 14), u.mLatitude, u.mLongitude);
-                        ret.add(pat);
-                    }
+
+        ArrayList<UserSetPatternModel> userSet = UserSetPatternModel.getLocationsDay(mContext, day);
+        if(!userSet.isEmpty()) {
+            ArrayList<PatternsModel> ret = new ArrayList<>();
+            for(UserSetPatternModel u : userSet) {
+                if(Integer.parseInt(u.mStart) <= bottom && Integer.parseInt(u.mEnd) > (bottom + 15)) {
+                    PatternsModel pat = new PatternsModel(day, String.valueOf(bottom), String.valueOf(bottom + 14), u.mLatitude, u.mLongitude);
+                    ret.add(pat);
                 }
+            }
+            if(!ret.isEmpty()) {
                 return ret;
             }
         }
+
         ArrayList<AveragesModel> lastThreeAveragesByDayHour = AveragesFinder.getInstance(mContext).getLastThreeAveragesByDayHour(day, String.valueOf(bottom));
         ArrayList<Location> threeLocations = new ArrayList<>();
         for (AveragesModel model : lastThreeAveragesByDayHour) {

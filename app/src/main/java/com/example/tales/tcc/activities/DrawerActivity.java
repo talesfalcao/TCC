@@ -15,6 +15,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
@@ -35,6 +36,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.tales.tcc.db.UserSetPatternModel;
 import com.example.tales.tcc.dialogs.ChooseDialog;
 import com.example.tales.tcc.Constants;
 import com.example.tales.tcc.DrawerAdapter;
@@ -53,6 +55,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -74,7 +77,7 @@ import cn.pedant.SweetAlert.SweetAlertDialog;
  * Created by tales on 08/06/2017.
  */
 
-public class DrawerActivity extends FragmentActivity implements OnMapReadyCallback {
+public class DrawerActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
     AlertDialog alertDialog;
     private ListView mDrawerList;
     private DrawerAdapter mAdapter;
@@ -165,7 +168,6 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
         array.add("Disable inspection");
         array.add("Block Device");
         array.add("Insert Pattern");
-        array.add("Wipe Device");
         array.add("Share family code");
         array.add("Logout");
 
@@ -246,40 +248,17 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
                     case 2:
                         new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.WARNING_TYPE)
                                 .setTitleText("Insert Pattern")
-                                .setContentText("Force a new pattern into the child's routine")
-                                .setConfirmText("Insert it!")
+                                .setContentText("In order to force a new pattern, perform a long click on the map where you want it to take place. To remove it, click on it and follow the instructions!")
+                                .setConfirmText("Gotcha!")
                                 .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                                     @Override
                                     public void onClick(SweetAlertDialog sDialog) {
-                                        sDialog
-                                                .setTitleText("Done!")
-                                                .setContentText("Pattern inserted!")
-                                                .setConfirmText("OK")
-                                                .setConfirmClickListener(null)
-                                                .changeAlertType(SweetAlertDialog.SUCCESS_TYPE);
+                                        sDialog.dismiss();
                                     }
                                 })
                                 .show();
                         break;
                     case 3:
-                        new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.WARNING_TYPE)
-                                .setTitleText("Wipe device?")
-                                .setContentText("Are you sure you want to wipe out the device? Once done, all not synced data will be lost forever")
-                                .setConfirmText("Wipe it!")
-                                .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
-                                    @Override
-                                    public void onClick(SweetAlertDialog sDialog) {
-                                        sDialog
-                                                .setTitleText("Done!")
-                                                .setContentText("The selected device has been successfully wiped")
-                                                .setConfirmText("OK")
-                                                .setConfirmClickListener(null)
-                                                .changeAlertType(SweetAlertDialog.SUCCESS_TYPE);
-                                    }
-                                })
-                                .show();
-                        break;
-                    case 4:
                         SharedPreferences sharedPreferences = getSharedPreferences(Constants.SHARED_PREFS, Context.MODE_PRIVATE);
                         LayoutInflater li2 = LayoutInflater.from(DrawerActivity.this);
                         View promptsView2 = li2.inflate(R.layout.qrdialog_layout, null);
@@ -316,14 +295,14 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
                         alertDialog = alertDialogBuilder2.create();
                         alertDialog.show();
                         break;
-                    case 5:
+                    case 4:
                         new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.WARNING_TYPE)
                                 .setTitleText("Are you sure?")
                                 .setConfirmText("Logout!")
                                 .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                                     @Override
                                     public void onClick(SweetAlertDialog sDialog) {
-                                        Intent newIntent = new Intent(DrawerActivity.this,LoginActivity.class);
+                                        Intent newIntent = new Intent(DrawerActivity.this, LoginActivity.class);
                                         newIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                         newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                         newIntent.putExtra("LOGOUT", true);
@@ -452,10 +431,10 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.clear();
+        mMap.setOnMarkerClickListener(this);
         Location lastOne = getDeviceLocation();
         if(lastOne != null) {
             LatLng pos = new LatLng(lastOne.getLatitude(), lastOne.getLongitude());
-
             mMap.addMarker(new MarkerOptions().position(pos).title("You").icon(vectorToBitmap(R.drawable.ic_person_pin_circle_black, Color.parseColor("#FF7755"))));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(pos));
             mMap.animateCamera(CameraUpdateFactory.zoomTo(13.5f));
@@ -463,12 +442,29 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
         final String[] stamp = LocationService.parseTimeStamp();
         final int bottom = (Integer.parseInt(stamp[2]) / 15) * 15;
 
-        final ArrayList<PatternsModel> patterns = PatternsModel.getPattern(this, stamp[3], String.valueOf(bottom));
+        final ArrayList<UserSetPatternModel> userSet = UserSetPatternModel.getLocationsDay(this, stamp[3]);
+        ArrayList<UserSetPatternModel> ret = new ArrayList<>();
+        if(!userSet.isEmpty()) {
+            for(UserSetPatternModel u : userSet) {
+                if(Integer.parseInt(u.mStart) <= bottom && Integer.parseInt(u.mEnd) > (bottom + 15)) {
+                    ret.add(u);
+                }
+            }
+        }
 
-        if (!patterns.isEmpty()) {
-            for (PatternsModel pattern : patterns) {
-                LatLng pat = new LatLng(Double.parseDouble(pattern.getLatitude()), Double.parseDouble(pattern.getLongitude()));
-                mMap.addMarker(new MarkerOptions().position(pat).title("Pattern").icon(vectorToBitmap(R.drawable.ic_locale, Color.parseColor("#AA00AA"))));
+        if (!ret.isEmpty()) {
+            for (UserSetPatternModel pattern : ret) {
+                LatLng pat = new LatLng(Double.parseDouble(pattern.mLatitude), Double.parseDouble(pattern.mLongitude));
+                mMap.addMarker(new MarkerOptions().position(pat).title("User-set Pattern").icon(vectorToBitmap(R.drawable.ic_locale, Color.parseColor("#AA00AA"))).draggable(false));
+            }
+        } else {
+
+            final ArrayList<PatternsModel> patterns = PatternsModel.getPattern(this, stamp[3], String.valueOf(bottom));
+            if (!patterns.isEmpty()) {
+                for (PatternsModel pattern : patterns) {
+                    LatLng pat = new LatLng(Double.parseDouble(pattern.getLatitude()), Double.parseDouble(pattern.getLongitude()));
+                    mMap.addMarker(new MarkerOptions().position(pat).title("Pattern").icon(vectorToBitmap(R.drawable.ic_locale, Color.parseColor("#4433AA"))).draggable(false));
+                }
             }
         }
 
@@ -476,7 +472,8 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
         if (!userLocs.isEmpty()) {
             for (UserLocModel userLoc : userLocs) {
                 LatLng pat = new LatLng(Double.parseDouble(userLoc.mLatitude), Double.parseDouble(userLoc.mLongitude));
-                mMap.addMarker(new MarkerOptions().position(pat).title(userLoc.mName).icon(vectorToBitmap(R.drawable.ic_locale, Color.parseColor("#FF8888"))));
+
+                mMap.addMarker(new MarkerOptions().position(pat).title(userLoc.mName).icon(vectorToBitmap(R.drawable.ic_locale, Color.parseColor("#FF8888"))).draggable(false));
             }
         }
 
@@ -572,17 +569,23 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
                         Log.d(day, starthours + ":" + startminutes + " TO " + endhours + ":" + endminutes);
                         Log.d(lastLatLng.latitude + "", lastLatLng.longitude + "");
 
-                        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+                        final DatabaseReference database = FirebaseDatabase.getInstance().getReference();
                         SharedPreferences sharedPreferences = getSharedPreferences(Constants.family, Context.MODE_PRIVATE);
-                        String family = sharedPreferences.getString(Constants.family, "");
+                        final String family = sharedPreferences.getString(Constants.family, "");
                         if(!family.isEmpty()) {
-                            for(UserLocModel user : selected) {
+                            for(final UserLocModel user : selected) {
                                 int start = Integer.valueOf(starthours) * 60;
                                 start += Integer.valueOf(startminutes);
                                 int end = Integer.valueOf(endhours) * 60;
                                 end += Integer.valueOf(endminutes);
-                                String save = "LAT=" + lastLatLng.latitude + "LONG=" + lastLatLng.longitude + "DAY=" + day + "START=" + start + "END=" + end;
+                                String save = "USR=" + user.id + "LAT=" + lastLatLng.latitude + "LONG=" + lastLatLng.longitude + "DAY=" + day + "START=" + start + "END=" + end;
                                 database.child(Constants.family).child(family).child(Constants.child).child(user.id).child(Constants.setPattern).setValue(save);
+                                final Handler handler = new Handler();
+                                handler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        database.child(Constants.family).child(family).child(Constants.child).child(user.id).child(Constants.setPattern).removeValue();                                    }
+                                }, 100);
                             }
 
                             new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.SUCCESS_TYPE)
@@ -627,5 +630,55 @@ public class DrawerActivity extends FragmentActivity implements OnMapReadyCallba
         });
         choose.show();
 
+    }
+
+    @Override
+    public boolean onMarkerClick(final Marker marker) {
+
+        if (marker.getTitle().equals("User-set Pattern")) {
+            new SweetAlertDialog(DrawerActivity.this, SweetAlertDialog.WARNING_TYPE)
+                    .setTitleText("Delete this pattern?")
+                    .setContentText("Since this is one of the patterns created by you (or other guardian), you can select to remove it from the child device!")
+                    .setConfirmText("Remove it!")
+                    .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sDialog) {
+                            final String[] stamp = LocationService.parseTimeStamp();
+
+                            final ArrayList<UserSetPatternModel> userSet = UserSetPatternModel.getLocationsDay(DrawerActivity.this, stamp[3]);
+                            for(final UserSetPatternModel m : userSet) {
+
+                                if(Double.parseDouble(m.mLatitude) == marker.getPosition().latitude && Double.parseDouble(m.mLongitude) == marker.getPosition().longitude) {
+                                    final DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+                                    SharedPreferences sharedPreferences = getSharedPreferences(Constants.family, Context.MODE_PRIVATE);
+                                    final String family = sharedPreferences.getString(Constants.family, "");
+                                    if(!family.isEmpty()) {
+                                        String remove = "USR=" + m.mUser + "LAT=" + marker.getPosition().latitude + "LONG=" + marker.getPosition().longitude + "DAY=" + stamp[3] + "START=" + m.mStart + "END=" + m.mEnd;
+                                        database.child(Constants.family).child(family).child(Constants.child).child(m.mUser).child(Constants.removePattern).setValue(remove);
+                                        final Handler handler = new Handler();
+                                        handler.postDelayed(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                database.child(Constants.family).child(family).child(Constants.child).child(m.mUser).child(Constants.removePattern).removeValue();                         }
+                                        }, 600);
+
+                                    }
+                                }
+                            }
+                            sDialog.dismiss();
+                        }
+                    })
+                    .setCancelText("Keep it!")
+                    .setCancelClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sweetAlertDialog) {
+                            sweetAlertDialog.dismiss();
+                        }
+                    })
+                    .show();
+
+            return true;
+        }
+        return false;
     }
 }

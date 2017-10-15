@@ -45,4 +45,5 @@ public class Constants {
     public static String setPattern= "setPattern";
     public static String userSetPatterns = "userSetPatterns";
     public static String disable = "disable";
+    public static String removePattern = "removePattern";
 }

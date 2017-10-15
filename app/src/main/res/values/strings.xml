@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TCC</string>
+    <string name="app_name">iPattern</string>
     <string name="select_days">Select the days</string>
     <string name="go">GO!</string>
     <string name="prompt">Select a day</string>

@@ -42,8 +42,12 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
      * @param token The new token.
      */
     private void sendRegistrationToServer(String token) {
-        String id = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
-        database.child(Constants.users).child(id).child(Constants.firebase_token).setValue(token);
+        try {
+            String id = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+            database.child(Constants.users).child(id).child(Constants.firebase_token).setValue(token);
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
     }
 }

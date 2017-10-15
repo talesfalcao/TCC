@@ -12,7 +12,7 @@ import com.example.tales.tcc.Constants;
 
 public class SQLiteHelper  extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "database.db";
-    private static final int VERSAO = 22;
+    private static final int VERSAO = 23;
 
     public SQLiteHelper(Context context){
         super(context, DATABASE_NAME, null, VERSAO);
@@ -26,8 +26,7 @@ public class SQLiteHelper  extends SQLiteOpenHelper {
         String createGrouping = "CREATE TABLE " + Constants.grouping + " (" + Constants.start_time + " integer, " + Constants.end_time + " integer, " + Constants.latitude + " text, " + Constants.longitude + " text, " + Constants.count + " integer, " + Constants.weekday + " text )";
         String createUser = "CREATE TABLE " + Constants.user + " ( _id INTEGER PRIMARY KEY, " +  Constants.name + " text, " + Constants.login + " text, " + Constants.password + " text, " + Constants.type + " text, " + Constants.parent + " text )";
         String createUserLocation = "CREATE TABLE " + Constants.userLoc + " ( " +  Constants.id + " text PRIMARY KEY, " + Constants.name + " text, " + Constants.latitude + " text, " + Constants.longitude + " text, " + Constants.inside + " text )";
-        String userSetPatterns = "CREATE TABLE " + Constants.userSetPatterns + " (" + Constants.start_time + " integer, " + Constants.end_time + " integer, " + Constants.weekday + " text, " + Constants.latitude + " text, "  + Constants.longitude + " text" + " )";
-
+        String userSetPatterns = "CREATE TABLE " + Constants.userSetPatterns + " (" + Constants.id + " text, " + Constants.start_time + " integer, " + Constants.end_time + " integer, " + Constants.weekday + " text, " + Constants.latitude + " text, "  + Constants.longitude + " text" + " )";
 
         db.execSQL(createLocation);
         db.execSQL(createAverages);
@@ -54,9 +53,9 @@ public class SQLiteHelper  extends SQLiteOpenHelper {
         String createGrouping = "CREATE TABLE " + Constants.grouping + " (" + Constants.start_time + " integer, " + Constants.end_time + " integer, " + Constants.latitude + " text, " + Constants.longitude + " text, " + Constants.count + " integer, " + Constants.weekday + " text )";
         String createUser = "CREATE TABLE " + Constants.user + " ( _id INTEGER PRIMARY KEY, " +  Constants.name + " text, " + Constants.login + " text, " + Constants.password + " text, " + Constants.type + " text, " + Constants.parent + " text )";
         String createUserLocation = "CREATE TABLE " + Constants.userLoc + " ( " +  Constants.id + " text PRIMARY KEY, " + Constants.name + " text, " + Constants.latitude + " text, " + Constants.longitude + " text, " + Constants.inside + " text )";
-        */String userSetPatterns = "CREATE TABLE " + Constants.userSetPatterns + " (" + Constants.start_time + " integer, " + Constants.end_time + " integer, " + Constants.weekday + " text, " + Constants.latitude + " text, "  + Constants.longitude + " text" + " )";
-/*
-        db.execSQL(createLocation);
+        */String userSetPatterns = "CREATE TABLE " + Constants.userSetPatterns + " (" + Constants.id + " text, " + Constants.start_time + " integer, " + Constants.end_time + " integer, " + Constants.weekday + " text, " + Constants.latitude + " text, "  + Constants.longitude + " text" + " )";
+
+        /*db.execSQL(createLocation);
         db.execSQL(createAverages);
         db.execSQL(createPattern);
         db.execSQL(createGrouping);
